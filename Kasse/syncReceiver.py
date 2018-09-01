@@ -16,7 +16,6 @@ from http.server import HTTPServer
 
 import logging
 logger = logging.getLogger('sync')
-logger.setLevel(logging.INFO)
 
 
 # HTTPRequestHandler class

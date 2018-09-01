@@ -19,7 +19,6 @@ import initLogger
 logger = initLogger.initLogger()
 
 
-
 from LocalStorage import LocalStorage
 from LocalStorage import getDatabaseFilepath
 
@@ -105,8 +104,8 @@ if __name__ == '__main__':
     logger.info("setup the database")
     ls=LocalStorage(getDatabaseFilepath())
     ls.setup(settings.paydeskName,
-             settings.extWebserverIp,       # sync ip
-             settings.extWebserverPort)     # sync port
+             settings.localSyncIp,       # sync ip
+             settings.localSyncPort)     # sync port
                 
     # start register interface
     logger.info("start subscriber listener")

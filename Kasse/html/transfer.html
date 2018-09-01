@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<script src="jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+	//syncTimeout = setTimeout(syncTimer, 8000);
+	console.log("itemDownload Ready")
+	getStatus2()
+	
+});
+
+$(function(){
+			
+	$("#btnStartTransfer").click(function(){
+		console.log("Start clicked");		
+		$.post(url="startDownload", function(data, success){
+			if (success==true) {
+				console.log("started download")
+			}
+			else {
+				console.log("not able to start download")
+			}
+		},"json")
+		itemDownloadStart();
+	})
+	
+	$("#btnKasse").click(function(){
+		console.log("Kasse clicked");		
+		location.href='kasse.html'
+	})
+	$("#btnUpdate").click(function(){
+		console.log("Kasse clicked");		
+		getStatus2()
+	})
+});
+
+function getStatus(){
+	$.get(url="getItemsUsersStatus", function(data, success){
+		if (success==true) {
+			jsonData=JSON.stringify(data)
+			console.log(jsonData)
+			$("#countUsers").val(jsonData["users"]["count"])
+			$("#countItems").val(jsonData["items"]["count"])
+		}
+		else {
+			console.log("not able to start download")
+		}
+	},"json")
+}
+
+function getStatus2(){
+	console.log("Get Status");
+	json_settings=JSON.stringify({});
+	$.ajax({
+		url: "getItemsUsersStatus",
+	    type: "POST",	    
+	    data: json_settings,	    
+	    contentType: "application/json",
+	    success: function(response){			// successful return
+	    	jsonData=JSON.stringify(response)
+	    	console.log("Response Data");
+	    	console.log(response);
+	    	$("#countUsers").val(jsonData.users.count)
+			$("#countItems").val(jsonData.items.count)
+	    	
+	    },
+		error: function(response){				// error return
+			console.log("--------------SETTINGS ERROR RESPONSE---------------");	
+		}
+	});	
+}
+
+
+
+</script>
+<body>
+<header>
+<h1>Transfer</h1>
+</header>
+<article>
+<label for=countUsers>Items:</label>
+<input type=text id=countUsers readonly></input>
+<label for=countItems>Items:</label>
+<input type=text id=countItems readonly></input>
+<button id=btnStartTransfer>Start Transfer</button>
+<button id=btnUpdate>Update</button>
+</article>
+<nav>
+<button id=btnKasse>zur Kasse</button>
+</nav>
+</body>
+</html>

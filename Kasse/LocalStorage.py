@@ -17,6 +17,9 @@ import re
 
 from Errors import RequestError
 
+import logging
+logger=logging.getLogger('db')
+
 __conn_cnt_init__=0
 __conn_cnt_connect__=0
 __disconn_cnt_destr__=0
@@ -49,7 +52,10 @@ class LocalStorage(object):
         self.createTables()        
         paydesk = self.getLocalPaydesk()        
         if paydesk==None:
+            logger.info("Create new local paydesk: %s, %s:%d"%(paydeskName,syncIp,syncPort))
             paydesk=self.createLocalPaydesk(paydeskName,syncIp,syncPort)
+        else:
+            logger.info("Local paydesk: %s"%(str(paydesk)))
         return paydesk
             
     # -------------------------------------------------------------------------
@@ -78,17 +84,16 @@ class LocalStorage(object):
                 print("BALANCE: %d"%bcnt)
                 
     # -------------------------------------------------------------------------
-    def __log__(self, *args, **kwargs):
-        if debugEventLocalStorage.isSet():
-            try:                        
-                print(args[0])
-            except:
-                pass
-            
+    def __log__(self, *args, **kwargs):    
+        try:
+            logger.debug(args[0])                        
+        except:
+            pass
+        
     # -------------------------------------------------------------------------    
     def dbQueryOne(self,stmt):
         try:
-            #self.__log__(stmt)
+            self.__log__(stmt)
             self.curs.execute(stmt)
             ret = self.curs.fetchone()
             #self.__log__("FETCHONE: "+str(ret))
@@ -100,7 +105,7 @@ class LocalStorage(object):
     # -------------------------------------------------------------------------    
     def dbQueryAll(self,stmt):
         try:            
-            #self.__log__(stmt)
+            self.__log__(stmt)
             self.curs.execute(stmt)
             ret = self.curs.fetchall()
             #self.__log__("FETCHALL: "+str(ret))
@@ -194,7 +199,7 @@ class LocalStorage(object):
             #r"I:\Eclipse\basar\workspace\Database\test6.sqlitedb"
             #if not os.path.exists(self.db_file):
             #    os.makedirs(os.path.basename(self.db_file))
-            self.__log__("Create/Connect to database "+self.db_file)
+            logger.info("Create/Connect to database "+self.db_file)
             #self.conn =sqlite3.connect(self.db_file)
             #self.curs=self.conn.cursor()
             
@@ -243,7 +248,7 @@ class LocalStorage(object):
         stmtList=[] 
         for user in userlist:
             if not re.match("^[0-9]+",user[1]):
-                print("User Invalid: "+str(user))
+                logger.info("User Invalid: "+str(user))
             else:       
                 stmt= "INSERT INTO users (id,number,code,nachname,vorname,tel,created,email)"
                 stmt+=" VALUES (?,?,?,?,?,?,?,?)"
@@ -400,12 +405,13 @@ class LocalStorage(object):
                 self.requestDbAccessInt()
                 self.execute("SELECT * from paydesks WHERE paydeskId='%s'"%paydeskId)
                 ret=self.curs.fetchone()        
-                if ret==None:            
+                if ret==None:
+                    logger.Info("Create Local Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
                     stmt="INSERT INTO paydesks ('paydeskId', 'name', 'created', 'updated', 'syncIp', 'syncPort', 'remote') "
                     stmt+="VALUES ('%s','%s','%s','%s','%s',%d,%d)"%(paydeskId,name,tnow,tnow,syncIp,syncPort,0)
                     self.dbWrite(stmt)                                    
             else:
-                print("Local Paydesk already exists: %s"%str(ret))                                               
+                logger.info("Local Paydesk already exists: %s"%str(ret))                                               
         finally:
             self.releaseDbAccessInt()
     
@@ -415,6 +421,7 @@ class LocalStorage(object):
             ret = self.dbQueryOne("SELECT * from paydesks WHERE remote=0")
             return ret                        
         except Exception as e:
+            logger.error("Local paydesk query failed: %s"%(str(e)))
             self.__log__(traceback.format_exc())
             return None            
     

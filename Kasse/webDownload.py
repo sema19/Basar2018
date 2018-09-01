@@ -128,11 +128,7 @@ def runWebDownload(url,ip,regid):
     itemsDownload(ls,url,ip,regid)        
     print("-"*30)
     del ls
-
-
-
-        
-       
+    
     
 
     

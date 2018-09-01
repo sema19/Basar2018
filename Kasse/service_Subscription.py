@@ -99,7 +99,9 @@ def stopSubscriberListener():
 def runSubscriberListener(ip,port):
     subscriberListenerStopEvent.clear()
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    sock.bind((ip, port))
+    ipa=ip.split('.')[0:2]
+    ipa.add(255)
+    sock.bind(('.'.join(ipa), port))
     logger.info("START SUBSCRIBER LISTENER AT %s:%s"%(str(ip),str(port)))
     while True:
         # wait for message
