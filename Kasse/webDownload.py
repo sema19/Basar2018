@@ -132,8 +132,7 @@ def runWebDownload(url,ip,regid):
 
 
         
-if __name__ == '__main__':    
-    runWebDownload(r"https://K1:19337934@www.basar-teugn.de/kasse","127.0.0.1","1")        
+       
     
 
     
