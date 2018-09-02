@@ -406,7 +406,7 @@ class LocalStorage(object):
                 self.execute("SELECT * from paydesks WHERE paydeskId='%s'"%paydeskId)
                 ret=self.curs.fetchone()        
                 if ret==None:
-                    logger.Info("Create Local Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
+                    logger.info("Create Local Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
                     stmt="INSERT INTO paydesks ('paydeskId', 'name', 'created', 'updated', 'syncIp', 'syncPort', 'remote') "
                     stmt+="VALUES ('%s','%s','%s','%s','%s',%d,%d)"%(paydeskId,name,tnow,tnow,syncIp,syncPort,0)
                     self.dbWrite(stmt)                                    
