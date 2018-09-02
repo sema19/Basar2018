@@ -107,9 +107,6 @@ var cartItems=[]
 var cartsAvailable=[]
 var cartObsolete=false;
 var cart={"id":0, "items":[], "sum":0.0, "msg":"", "status":"undefined"}
-var detectedInputMethod="undef"
-var lastInputTime=0
-var inputDeltas=[]
 
 $(document).ready(function() {
 	//syncTimeout = setTimeout(syncTimer, 8000);
@@ -123,81 +120,22 @@ $(function(){
 		if (inputTimeout>0){			
 	       	clearTimeout(inputTimeout);					// stop timeout if it was running 
 	    }		
-		console.log("DETECTED INPUT METHOD IN:"+detectedInputMethod)
-		var inputLen = $("#eingabeId").val().length;	// get length of barcode
-		if (inputLen==1){
-			console.log("FIRST INPUT: SET INPUT METHOD TO AUTO")
-			detectedInputMethod="auto"
-			lastInputTime=Date.now()			
-		}		
-		else if (inputLen>=2 && detectedInputMethod=="auto"){
-			var inputDelta= Date.now()-lastInputTime
-			console.log("INPUT DELTA:")
-			console.log(inputDelta)
-			if (inputDelta>100){
-				console.log("SET INPUT METHOD TO MANUAL")
-				detectedInputMethod="manual"
-			}
-			lastInputTime=Date.now()
-		}
+		var inputLen = $("#eingabeId").val().length;	// get length of barcode		
+	
+		if (inputLen == 8) {
+	       	var barcode = $("#eingabeId").val();
+	       	postJsonCartResponse("barcode",{"id":cart["id"], "bc":barcode})
+	       	//addToCart(barcode)			
+	       	$("#eingabeId").val("");					// reset the input field
+	    } else if (inputLen > 8) {						// error case too many characters
+	       	$("#eingabeId").val("");
+	    } else if (inputLen > 0) {						// between 1 and 8 characters -> run timeout
+	       	console.log("Input: "+inputLen);
+	       	inputTimeout = setTimeout(function(){
+	       		$("#eingabeId").val("");      			// reset input value by timeout  		
+	     	}, 5000);
+	    }
 		
-		if (detectedInputMethod=="auto" || detectedInputMethod=="undef"){
-			if (inputLen == 8) {
-				detectedInputMethod=="undef"
-		       	var barcode = $("#eingabeId").val();
-		       	postJsonCartResponse("barcode",{"id":cart["id"], "bc":barcode})
-		       	//addToCart(barcode)			
-		       	$("#eingabeId").val("");					// reset the input field
-		    } else if (inputLen > 8) {						// error case too many characters
-		       	$("#eingabeId").val("");
-		    } else if (inputLen > 0) {						// between 1 and 8 characters -> run timeout
-		       	console.log("Input: "+inputLen);
-		       	inputTimeout = setTimeout(function(){
-		       		$("#eingabeId").val("");      			// reset input value by timeout  		
-		     	}, 5000);
-		    }
-		}else{
-			
-		    if (inputLen == 10) {
-		    	detectedInputMethod="undef"
-		       	var barcode = $("#eingabeId").val();
-		    	console.log("10 DIGIT BARCODE DETECTED")
-		       	postJsonCartResponse("barcode10",{"id":cart["id"], "bc":barcode})
-		       	//addToCart(barcode)			
-		       	$("#eingabeId").val("");					// reset the input field
-		       }        	
-		       else if (inputLen > 10) {						// error case too many characters
-		       	$("#eingabeId").val("");
-		       }
-		       else if (inputLen==8) {
-		    	   var barcode = $("#eingabeId").val();		    	   
-		    	   if (barcode[0]=='9'){		// commands start with 9 and always have 8 length
-		    		   console.log("MANUAL CMD INPUT DETECTED")
-		    		   postJsonCartResponse("barcode",{"id":cart["id"], "bc":barcode})
-		       	   		$("#eingabeId").val("");      			// reset input value by timeout
-		    	   } else if (barcode[3]=='1' && barcode[6]=='7'){
-		    		   // most likely a manual set 8 digit, if 2 sec timeout hits without a new input we process it
-		    		   console.log("LOOKS LIKE A MANUAL 8 DIGIT BARCODE INPUT - WAIT 2 SEC")
-		    		   inputTimeout = setTimeout(function(){
-			    	   		var barcode = $("#eingabeId").val();
-					       	postJsonCartResponse("barcode",{"id":cart["id"], "bc":barcode})
-				       	   	$("#eingabeId").val("");      			// reset input value by timeout  		
-				       }, 2000);   
-		    	   } else {
-		    		   console.log("LOOKS LIKE A MANUAL 10 DIGIT BARCODE INPUT BEING AT THE 8 DIGIT")
-		    		   inputTimeout = setTimeout(function(){			    	   		
-				       	   	$("#eingabeId").val("");      			// reset input value by timeout  		
-				       }, 5000);
-		    	   }
-		       }
-		       else if (inputLen > 0) {						// between 1 and 8 characters -> run timeout
-		       	console.log("Input: "+inputLen);
-		       	inputTimeout = setTimeout(function(){
-		       		$("#eingabeId").val("");      			// reset input value by timeout  		
-		       	}, 5000);        	
-		       }		    
-		}
-		console.log("DETECTED INPUT METHOD OUT:"+detectedInputMethod)
 	});
 	$("#btnCheckout").click(function(){				
 		postJsonCartResponse("sold", {"id":cart["id"]})
@@ -305,7 +243,7 @@ function postJsonCartResponse(url, data){
 </head>
 	<body>
 		<header>
-			<h1>Grundschule Teugn Basar 2017</h1>
+			<h1>Grundschule Teugn Basar 2018</h1>
 		</header>
 		<section id="content">
 			<section id="article">

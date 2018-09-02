@@ -27,7 +27,7 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
             
     def do_GET(self):
-        logger.info("GET: %s"%self.path)           
+        logger.debug("GET: %s"%self.path)           
         self.send_response(404)
         return
     
@@ -38,7 +38,7 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         return ret    
             
     def do_POST(self):
-        logger.info("POST: %s"%self.path)
+        logger.debug("POST: %s"%self.path)
         if self.path=="/sync":
             jsonStr=""
             try:

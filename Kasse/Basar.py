@@ -130,9 +130,11 @@ if __name__ == '__main__':
                                        settings.intWebserverPort, 
                                        settings.startpage))    
     
-    
+    '''
     while(1):
-        evtOccured = stopAllEvent.wait(10)
+        
+        
+        
         stopAllEvent.clear()
         if evtOccured:                      # event set
             logger.info("WAIT FOR SHUTDOWN, TIMEOUT 20 sec ...")
@@ -167,7 +169,8 @@ if __name__ == '__main__':
             for t in threadsRunning.keys():
                 if not threadsRunning[t]["id"].is_alive():                                        
                     logger.info("Thread %s NOT alive"%(str(t)))
-        time.sleep(1)
+        '''
+    stopAllEvent.wait()
     logger.info("GOODBYE!!!")
     sys.exit(0)
         
