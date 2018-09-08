@@ -12,6 +12,7 @@ Created on 15.07.2017
 import traceback
 import os
 import json
+import threading
 from threading import Event
 #from urllib.parse import urlparse
 #from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -19,18 +20,13 @@ from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 from LocalStorage import LocalStorage
 
+from basarLogger import logger
+import webpageBuilder as wp
 
-
-extWebserverShutdownEvent = Event()
-__intWebserverInst__ = None
-def extWebserverShutdownObserver():
-    global __extWebserverInst__
-    extWebserverShutdownEvent.wait()
-    __extWebserverInst__.shutdown()
 
 
 # HTTPRequestHandler class
-class requestHandler(BaseHTTPRequestHandler):
+class extRequestHandler(BaseHTTPRequestHandler):
     
     def getOkTextHeader(self):
         self.send_response(200,'OK')
@@ -49,29 +45,46 @@ class requestHandler(BaseHTTPRequestHandler):
         return ret
             
     def do_GET(self):
-        print("GET: %s"%self.path)
+        logger.debug("GET: %s"%self.path)
+        
         # ----------------------------- infos                                        
-        if self.path=="/info.html":
+        if self.path=="/status.html":
             self.getOkTextHeader()
-            with open("html/info.html",'r') as f:                
-                message=f.read()
-                self.wfile.write(message)
+            pg =wp.html(wp.head("status","",""),
+                        wp.body(wp.header("Status"),
+                                "<p>To Be Done</p>"))
+            
+            self.wfile.write(pg.encode())
         # ----------------------------- provide jquery
         elif self.path=="/jquery.min.js":
             with open("html/jquery.min.js") as f:                       
                 message=f.read()
-                self.wfile.write(message)
+                self.wfile.write(message.encode())
         # ----------------------------- provide css files
-        elif self.path=="/kasse.css":
-            with open("html/kasse.css") as f:                       
+        elif self.path=="/status.css":
+            with open("html/status.css") as f:                       
                 message=f.read()
-                self.wfile.write(message)        
+                self.wfile.write(message.encode())
+        # ----------------------------- provide java script
+        elif self.path=="/status.js":
+            with open("html/kasse.js") as f:                       
+                message=f.read()
+                self.wfile.write(message.encode())        
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
-            self.send_response(200)                    
+            self.send_response(200)
+            
+        elif self.path=="/status.json":
+            self.getOkJsonHeader()
+            ls=LocalStorage()
+            statusDict=ls.getStatus()
+            jsonData=json.dumps(statusDict)
+            self.wfile.write(jsonData.encode())                    
         else:            
             self.send_response(404)
-        return    
+        return 
+    
+       
             
     def do_POST(self):
         print("POST: %s"%self.path)
@@ -130,15 +143,35 @@ class requestHandler(BaseHTTPRequestHandler):
             self.send_response(404)     
         return
 
+___extWebserverInst__=None
     
+def startExtWebserver(ip, port):
+    # start webserver
+    logger.info("Start External Webserver on %s:%s"%(ip,str(port)))    
+    extWebsrvThread = threading.Thread(name="extWebsvr",target=runExtWebserver, args=[ip, port])
+    extWebsrvThread.start()
+     
+    logger.info('create shutdown event')
+    shutdownEvent = Event()
+    
+    logger.info('start observer')
+    extWebsrvShutdownObserver = threading.Thread(name="extWebsvrShutdown",target=runExtWebserverShutdownObserver, args=[shutdownEvent])
+    extWebsrvShutdownObserver.start()
+    
+    return shutdownEvent
+
+def runExtWebserverShutdownObserver(shutdownEvent):
+    global __extWebserverInst__
+    shutdownEvent.wait()
+    __extWebserverInst__.shutdown()
+    logger.info('extWebserverObserver shut down')
+             
+# ------------------------------------------------------
 def runExtWebserver(ip, port):
-    global __intWebserverInst__
-    print('starting external server...') 
-    # Server settings
-    # Choose port 8080, for port 80, which is normally used for a http server, you need root access
-    server_address = (ip,port)  #'192.168.2.106', 8080)
-    __intWebserverInst__ = HTTPServer(server_address, requestHandler)
-    print('running webserver...')
-    __intWebserverInst__.serve_forever()
-    print('shutdown webserver, closing thread...')
-    
+    global __extWebserverInst__
+    logger.info('starting local server...')
+    server_address = (ip, port)    #8082)
+    __extWebserverInst__ = HTTPServer(server_address, extRequestHandler)
+    logger.info('running local webserver...')
+    __extWebserverInst__.serve_forever()
+    logger.info('local webserver shut down')

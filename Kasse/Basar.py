@@ -23,7 +23,7 @@ from LocalStorage import LocalStorage
 from LocalStorage import getDatabaseFilepath
 
 import IntWebserver
-from ExtWebserver import runExtWebserver
+import ExtWebserver
 import service_Subscription
 #import runWebSync
 #from service_Subscription import startSubscriberListener
@@ -40,7 +40,6 @@ from settings import settingsInst
 import requests
 from LocalStorage import debugEventLocalStorage
 from IntWebserver import stopAllRequested
-from ExtWebserver import extWebserverShutdownEvent
 
 stopAllEvent = threading.Event()
 
@@ -99,8 +98,7 @@ if __name__ == '__main__':
     '''
 
     ethAdapterIP=settings.extWebserverIp
-    broadcast_port=settings.getBroadcastPort()
-    intWebserverPort=settings.getIntWebserverPort()
+    intWebserverPort=settings.intWebserverPort
     
     logger.info("setup the database")
     ls=LocalStorage(getDatabaseFilepath())
@@ -110,7 +108,7 @@ if __name__ == '__main__':
                 
     # start register interface
     logger.info("start subscriber listener")
-    service_Subscription.startSubscriberListener(settings.broadcastIp,broadcast_port)
+    service_Subscription.startSubscriberListener(settings.broadcastIp,settings.broadcastPort)
                             
     # start webserver
     logger.info("Start Internal Webserver")
@@ -118,7 +116,7 @@ if __name__ == '__main__':
     
     # wait for others to subscribe
     logger.info("start subscriber updater (subscribe to others)")
-    service_Subscription.startSubscriberUpdater(broadcast_port)    
+    service_Subscription.startSubscriberUpdater(settings.broadcastPort)    
     
     logger.info("start local sync")
     localSyncStopSend = syncSender.startLocalSync()
@@ -129,7 +127,11 @@ if __name__ == '__main__':
     intWebserverPort=settings.getIntWebserverPort()
     webbrowser.open("http://%s:%d/%s"%(settings.intWebserverIp,
                                        settings.intWebserverPort, 
-                                       settings.startpage))    
+                                       settings.startpage))
+    
+    # start webserver
+    logger.info("Start External Webserver")
+    ExtWebserver.startExtWebserver(settings.extWebserverIp, settings.extWebserverPort)    
     
     '''
     while(1):

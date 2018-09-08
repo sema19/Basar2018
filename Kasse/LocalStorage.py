@@ -980,17 +980,30 @@ class LocalStorage(object):
         #self.paydesksInfo=tblinfo  
         self.paydesksInfo=['paydeskId','name','created','updated','syncIp','syncPort','remote','lastSyn','lastSyncIdx','itemsSynced','lastFailedSyncReq','lastFailedSyncCount']
         retDict={}          
+        retDict["itemsSold"]={}
+        stmt = 'select count(*), sum(it.preis) from sold sl left join items it on sl.barcode=it.barcode where status="sold";'
+        allSoldRaw = self.dbQueryOne(stmt)
+        retDict["itemsSold"]["count"]=str(allSoldRaw[0])
+        retDict["itemsSold"]["sum"]=str(allSoldRaw[1])
+        
+        retDict["itemsSoldByPaydesk"]={}
         stmt = 'select count(*), paydeskId from sold sl where sl.status="sold" group by sl.paydeskId;'
-        allSoldRaw = self.dbQueryAll(stmt)
-        if len(allSoldRaw)>0:            
-            retDict["itemsSold"]={str(allSoldRaw[1]):{"sold":str(allSoldRaw[0])}}
+        allSoldPaydeskRaw = self.dbQueryAll(stmt)
+        if len(allSoldPaydeskRaw)>0:
+            for idx in range(0,len(allSoldPaydeskRaw)):        
+                paydeskId =str(allSoldPaydeskRaw[idx][1]) 
+                if not paydeskId in retDict["itemsSoldByPaydesk"]:
+                    retDict["itemsSoldByPaydesk"][paydeskId]={}    
+                retDict["itemsSoldByPaydesk"][paydeskId]["sold"]=str(allSoldPaydeskRaw[idx][0])
         
         stmt = "select count(*), paydeskId from sold where status='sold' and soldtime>=datetime('now','-10 min') group by paydeskId;"
         soldLast10minRaw = self.dbQueryAll(stmt)
         if len(soldLast10minRaw)>0:
-            if not str(soldLast10minRaw[1]) in retDict["itemsSold"]:
-                retDict["itemsSold"][str(soldLast10minRaw[1])]={}
-                retDict["itemsSold"][str(soldLast10minRaw[1])]["sold10min"]=str(soldLast10minRaw[0])                             
+            for idx in range(0,len(allSoldRaw)):
+                paydeskId =str(soldLast10minRaw[idx][1]) 
+                if not paydeskId in retDict["itemsSoldByPaydesk"]:
+                    retDict["itemsSoldByPaydesk"][paydeskId]={}
+                retDict["itemsSoldByPaydesk"][paydeskId]["sold10min"]=str(soldLast10minRaw[idx][0])                             
         
         # synced machines
         stmt="select * from paydesks"

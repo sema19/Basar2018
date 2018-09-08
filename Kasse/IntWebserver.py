@@ -103,7 +103,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
          
     # ----------------------------- HANDLE GET COMMANDS
     def do_GET(self):
-        logger.info("LOCAL GET: %s"%self.path)
+        logger.debug("LOCAL GET: %s"%self.path)
 
         # ------------------------------------------------------
         if self.path=="/srvStatus":
@@ -144,13 +144,19 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
         elif self.path=="/kasse.css":
             with open("html/kasse.css") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())        
+                self.wfile.write(message.encode())
+        # ----------------------------- provide css files
+        elif self.path=="/kasse.js":
+            with open("html/kasse.js") as f:                       
+                message=f.read()
+            self.wfile.write(message.encode())                
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
             with open("html/icon.png") as f:                       
                 message=f.read()
                 self.wfile.write(message.encode())
         else:            
+            logger.error("INVALID PATH LOCAL GET: %s"%self.path)
             self.send_response(404)
         return
  
@@ -170,7 +176,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 cart=ls.getOpenCart(create=True)
                 openCartId=int(cart[0])                                                
                 bc = str(jsonData["bc"])
-                print("BARCODE RECEIVED: "+bc)
+                logger.debug("BARCODE RECEIVED: "+bc)
                 if (bc=="99914158"):
                     cartId, msg = ls.closeCart()
                     #TODO: check for the sell at close flag                    

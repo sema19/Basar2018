@@ -19,6 +19,9 @@ from syncLogger import synclogger as logger
 
 # HTTPRequestHandler class
 class syncRequestHandler(BaseHTTPRequestHandler):
+    
+    def log_message(self, *args):        
+        pass
         
     def getOkJsonHeader(self):
         self.send_response(200,'OK')
