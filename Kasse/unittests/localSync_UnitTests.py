@@ -13,8 +13,8 @@ from http.server import HTTPServer
 import syncSender
 import syncReceiver
 
-import initLogger
-logger=initLogger.initLogger()
+import basarLogger
+logger=basarLogger.initLogger()
 
 from LocalStorage import LocalStorage
 from LocalStorage import getDatabaseFilepath

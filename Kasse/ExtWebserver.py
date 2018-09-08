@@ -88,6 +88,27 @@ class requestHandler(BaseHTTPRequestHandler):
                 print("Error: %s"%str(e))
                 print(traceback.format_exc())
                 self.send_response(404)
+                
+                
+        if self.path=="/status":
+            try:
+                self.getOkJsonHeader()                
+                jsonDataIn=json.loads(self.getRawData())
+                paydeskId=jsonDataIn['paydeskId']
+                idx=jsonDataIn['idx']
+                cnt=jsonDataIn['cnt']
+                ls=LocalStorage()
+                paydeskIdRef = ls.getLocalPaydesk()[0]                
+                items=ls.getSoldItems(paydeskId, idx, cnt)
+                jsonData=json.dumps(items)
+                self.wfile.write(jsonData)
+            except Exception as e:
+                print("Error: %s"%str(e))
+                print(traceback.format_exc())
+                self.send_response(404)
+        else:
+            self.send_response(404)     
+        return
         
         if self.path=="/sync":
             try:

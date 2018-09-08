@@ -9,8 +9,8 @@ import time
 import unittests.db_testdata_creator as dbtd
 
 
-import initLogger
-logger=initLogger.initLogger()
+import basarLogger
+logger=basarLogger.initLogger()
 
 import service_Subscription as subscription
 

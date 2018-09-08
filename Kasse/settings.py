@@ -124,48 +124,6 @@ class Settings(object):
     def getWebSyncRegisterdId(self):
         return self.webSyncRegisterId
             
-    '''    
-    def _getNetworkInfo(self):
-        
-        result = {}
-        found={}
-        try:
-            
-            if platform.system().lower()=="windows":
-                cmd="ipconfig"
-            else:
-                cmd="ifconfig"    
-            #output = subprocess.getoutput(cmd)        # Python 3.6
-            process = subprocess.Popen([cmd], stdout=subprocess.PIPE)
-            output, err = process.communicate()            
-            adapterDict={}
-            if isinstance(output,bytes):
-                output = output.decode()
-            lines=output.split('\n')    
-            for line in lines:
-                if re.match("^[A-Za-z0-9]+.*",line):
-                    found[line]={}
-                    adapterDict=found[line]
-                elif re.match("^[\t ].*",line):
-                    ret=line.split(':',1)
-                    if len(ret)==2:
-                        name,data=ret
-                        name=name.strip().strip('. ')
-                        data=data.strip()
-                        adapterDict[name]=data
-                    else:
-                        print("Not able to handle %s"%str(ret))
-            for key in found:
-                for subkey in found[key].keys():
-                    if "IPv4" in subkey:
-                        found[key]["ip"]=found[key][subkey]
-                        result[key]=found[key]
-                        break
-                                    
-        except Exception as e:
-            print(e)
-        return result
-    ''' 
 
 
 settingsInst=Settings()

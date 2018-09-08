@@ -4,12 +4,6 @@ Created on 07.08.2017
 @author: Laptop8460
 '''
 
-
-'''
-Created on 15.07.2017
-
-@author: Laptop8460
-'''
 #import traceback
 import os
 import json
@@ -27,11 +21,14 @@ from syncSender import localSyncEvent
 from LocalStorage import LocalStorage
 from LocalStorage import debugEventLocalStorage
 from webDownload import startWebDownload
+from webDownload import requestCheckIn
 #from http.server import BaseHTTPRequestHandler, HTTPServer, SimpleHTTPRequestHandler
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 #from settings import settingsInst
 from Errors import RequestError
+
+import settings
 
 stopAllRequested=Event()
 
@@ -117,19 +114,12 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             except Exception as e:
                 logger.error(str(e))
                 self.wfile.write(json.dumps({"msg":str(e),"err":1}).encode())
-                        
-        
+            
         # ----------------------------- provide webpages
         # ----------------------------- settings                                        
         elif self.path=="/checkIn.html":
             self.getOkTextHeader()
             with open("html/checkIn.html",'r') as f:                
-                message=f.read()
-                self.wfile.write(message.encode())
-        # ----------------------------- settings                                        
-        elif self.path=="/settings.html":
-            self.getOkTextHeader()
-            with open("html/settings.html",'r') as f:                
                 message=f.read()
                 self.wfile.write(message.encode())
         # ----------------------------- transfer
@@ -228,11 +218,13 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 if userItemsRaw==None:
                     userItemsRaw=[]
                 ret=ls.addCheckIn(userData[0])
+                ret = LocalStorage.getCheckInSyncInfo()
+                requestCheckIn();
                 userItems=[]
                 for usit in userItemsRaw:
                     userItems.append({"pos":usit[2],"bc":usit[3],"txt":usit[4],"size":usit[5],"price":usit[6]})
                 jsonData=json.dumps({"userInfo":{"user":userData, "items":userItems},"msg":"User checked In","error":0})                        
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode())                
             except RequestError as e:
                 logger.error(str(e))            
                 jsonData=self.getCartResponse(ls, openCartId, 'open', msg=e.msg, error=e.err)
@@ -251,7 +243,11 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
         # ------------------------------------------------------
         elif self.path=="/startDownload":
             logger.info("Start Download")
-            startWebDownload()
+            myset=settings.Settings()
+            webid = myset.webSyncRegisterId
+            url = myset.webSyncUrl
+            ip = myset.webSyncIp
+            startWebDownload(url,ip,webid)
             jsonData=json.dumps({"action":"runWebDownload"})                        
             self.wfile.write(jsonData.encode())
             

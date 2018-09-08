@@ -9,8 +9,8 @@ import IntWebserver
 import time
 import requests
 
-import initLogger
-logger=initLogger.initLogger()
+import basarLogger
+logger=basarLogger.initLogger()
 
 class Test(unittest.TestCase):
 

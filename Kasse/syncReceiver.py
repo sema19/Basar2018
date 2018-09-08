@@ -14,8 +14,7 @@ from threading import Event
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 
-import logging
-logger = logging.getLogger('sync')
+from syncLogger import synclogger as logger
 
 
 # HTTPRequestHandler class
@@ -27,8 +26,15 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
             
     def do_GET(self):
-        logger.debug("GET: %s"%self.path)           
-        self.send_response(404)
+        logger.debug("GET: %s"%self.path)
+        if self.path=="/status":
+            self.getOkJsonHeader()
+            ls=LocalStorage()
+            statusDict=ls.getStatus()
+            jsonData=json.dumps(statusDict)
+            self.wfile.write(jsonData.encode())
+        else:           
+            self.send_response(404)
         return
     
     def getRawData(self):
@@ -38,17 +44,23 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         return ret    
             
     def do_POST(self):
-        logger.debug("POST: %s"%self.path)
+        #logger.debug("POST: %s"%self.path)
         if self.path=="/sync":
             jsonStr=""
             try:
                 self.getOkJsonHeader()
                 jsonStr = self.getRawData()                
-                jsonDataIn=json.loads(jsonStr)
+                jsonDataIn=json.loads(jsonStr)                
                 paydeskId=jsonDataIn['paydeskId']
                 idx=jsonDataIn['idx']
                 cnt=jsonDataIn['cnt']
+                if 'source' in jsonDataIn:
+                    sourcePaydeskId = jsonDataIn['source']
+                else:
+                    sourcePaydeskId=paydeskId
                 ls=LocalStorage()
+                # add sync request to sync db
+                ls.writeSyncRequestReceived(sourcePaydeskId,idx)
                 paydeskIdRef = ls.getLocalPaydesk()[0]                
                 items=ls.getSoldItems(paydeskId, idx, cnt)
                 logger.debug("Sync sold items: %s",items)

@@ -7,7 +7,6 @@ Created on 08.08.2017
 import sqlite3
 from sqlite3 import Error
 
-import pprint
 import uuid
 from datetime import datetime
 import traceback
@@ -17,8 +16,7 @@ import re
 
 from Errors import RequestError
 
-import logging
-logger=logging.getLogger('db')
+from dbLogger import dblogger as logger
 
 __conn_cnt_init__=0
 __conn_cnt_connect__=0
@@ -44,9 +42,12 @@ class LocalStorage(object):
         self.paydeskArticleCnt=None        
         self.cartId=None
         self.pos=None
-        self.traceConn("INIT")        
+        self.traceConn("INIT")
+        self.paydesksInfo=None        
         self.conn =sqlite3.connect(self.db_file)            
         self.curs = self.conn.cursor()
+        
+        
         
     def setup(self, paydeskName, syncIp, syncPort):
         self.createTables()        
@@ -383,16 +384,26 @@ class LocalStorage(object):
     # -------------------------------------------------------------------------
     
     def createPaydeskTable(self):
+        self.paydesksInfo=['paydeskId','name','created','updated','syncIp','syncPort','remote','lastSyncReqReceived',
+                           'lastSyncIdx','itemsSynced','lastFailedSyncReq','lastFailedSyncCount']
         self.curs.execute('''CREATE TABLE IF NOT EXISTS paydesks ( paydeskId TEXT PRIMARY KEY,
                                                                       name TEXT,
                                                                       created DATETIME,
                                                                       updated DATETIME,                                                                  
                                                                       syncIp TEXT,
                                                                       syncPort INTEGER,
-                                                                      remote BOOL
+                                                                      remote BOOL,
+                                                                      lastSyncReqReceived DATETIME,
+                                                                      lastSyncIdx INTEGER DEFAULT 0,
+                                                                      itemsSynced INTEGER DEFAULT 0,
+                                                                      lastFailedSyncReq DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                                                      lastFailedSyncCount INTEGER DEFAULT 0
                                                                 )''')
+        
         print("PAYDESKS: "+str(self.curs.fetchone()))
         
+        #self.conn.commit()
+                     
     # -------------------------------------------------------------------------
     def createLocalPaydesk(self, name, syncIp, syncPort):        
         try:
@@ -949,6 +960,57 @@ class LocalStorage(object):
     # -------------------------------------------------------------------------
     def addCheckIn(self, user_id):
         checkInTime=str(datetime.now())
-        ret = self.dbWrite("INSERT INTO checkin (user_id, checkInTime) VALUES (%s,'%s')"%(str(user_id),str(checkInTime)))           
+        ret = self.dbWrite("INSERT INTO checkin (user_id, checkInTime) VALUES (%s,'%s')"%(str(user_id),str(checkInTime)))
+        
+    def getCheckInSyncInfo(self):
+        ret = self.dbQueryOne("SELECT COUNT(*), MAX(checkInTime) FROM checkin")
+        
+    def writeSyncRequestReceived(self, paydeskId, idx):
+        ret = self.dbWrite("UPDATE paydesks SET lastSyncReqReceived='%s', lastSyncIdx=%d WHERE paydeskId='%s'"%(str(datetime.now()),idx,paydeskId))
+    
+    def writeSyncRequest(self,paydeskId, itemsSynced):
+        ret = self.dbWrite("UPDATE paydesks SET lastFailedSyncCount=0, itemsSynced=%d WHERE paydeskId='%s'"%(itemsSynced,paydeskId))
+            
+    def writeFailedSyncRequest(self,paydeskId, requestTime):
+        ret = self.dbWrite("UPDATE paydesks SET lastFailedSyncReq='%s', lastFailedSyncCount=lastFailedSyncCount+1 WHERE paydeskId='%s'"%(str(requestTime),paydeskId))
+        
+    def getStatus(self):
+        
+        #tblinfo = self.execute('PRAGMA table_info(paydesks)');
+        #self.paydesksInfo=tblinfo  
+        self.paydesksInfo=['paydeskId','name','created','updated','syncIp','syncPort','remote','lastSyn','lastSyncIdx','itemsSynced','lastFailedSyncReq','lastFailedSyncCount']
+        retDict={}          
+        stmt = 'select count(*), paydeskId from sold sl where sl.status="sold" group by sl.paydeskId;'
+        allSoldRaw = self.dbQueryAll(stmt)
+        if len(allSoldRaw)>0:            
+            retDict["itemsSold"]={str(allSoldRaw[1]):{"sold":str(allSoldRaw[0])}}
+        
+        stmt = "select count(*), paydeskId from sold where status='sold' and soldtime>=datetime('now','-10 min') group by paydeskId;"
+        soldLast10minRaw = self.dbQueryAll(stmt)
+        if len(soldLast10minRaw)>0:
+            if not str(soldLast10minRaw[1]) in retDict["itemsSold"]:
+                retDict["itemsSold"][str(soldLast10minRaw[1])]={}
+                retDict["itemsSold"][str(soldLast10minRaw[1])]["sold10min"]=str(soldLast10minRaw[0])                             
+        
+        # synced machines
+        stmt="select * from paydesks"
+        paydesksRaw = self.dbQueryAll(stmt)
+        paydesksDict={}
+        if len(paydesksRaw)>0:
+                        
+            for i in range(0,len(paydesksRaw)):
+                innerDict = {}
+                for j in range(0,len(paydesksRaw[i])):
+                    try:
+                        header_name = self.paydesksInfo[j]
+                    except:
+                        header_name="unknown(%d)"%j
+                    value=paydesksRaw[i][j]
+                    innerDict[header_name]=str(value)
+                paydesksDict[paydesksRaw[i][0]]=innerDict
+        
+        retDict["paydesks"]=paydesksDict
+        return retDict
+                     
 
         

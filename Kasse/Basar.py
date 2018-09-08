@@ -14,9 +14,9 @@ from pprint import pformat
 import sys
 import signal
 
-import logging
-import initLogger
-logger = initLogger.initLogger()
+
+
+from basarLogger import logger
 
 
 from LocalStorage import LocalStorage
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     server_is_running=False
     url = "http://127.0.0.1:8082/srvStatus"    
     headers={'content-type':u'application/json'}
+    '''
     try:
         r=requests.get(url=url, headers=headers)
         if r.status_code==200:
@@ -95,7 +96,7 @@ if __name__ == '__main__':
             server_is_running=True            
     except Exception as e:
         logger.error("SERVER TEST REQUEST ERROR: %s"%str(e))
-    
+    '''
 
     ethAdapterIP=settings.extWebserverIp
     broadcast_port=settings.getBroadcastPort()
