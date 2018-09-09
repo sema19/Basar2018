@@ -155,7 +155,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
         elif self.path=="/favicon.ico":
             with codecs.open("html/icon.png","r") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode('utf-8'))
+                self.wfile.write(message)
         else:            
             logger.error("INVALID PATH LOCAL GET: %s"%self.path)
             self.send_response(404)
