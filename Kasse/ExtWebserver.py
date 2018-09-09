@@ -59,17 +59,17 @@ class extRequestHandler(BaseHTTPRequestHandler):
         elif self.path=="/jquery.min.js":
             with open("html/jquery.min.js") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide css files
         elif self.path=="/status.css":
             with open("html/status.css") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide java script
         elif self.path=="/status.js":
             with open("html/kasse.js") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())        
+                self.wfile.write(message.encode('utf-8'))        
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
             self.send_response(200)
@@ -79,7 +79,7 @@ class extRequestHandler(BaseHTTPRequestHandler):
             ls=LocalStorage()
             statusDict=ls.getStatus()
             jsonData=json.dumps(statusDict)
-            self.wfile.write(jsonData.encode())                    
+            self.wfile.write(jsonData.encode('utf-8'))                    
         else:            
             self.send_response(404)
         return 

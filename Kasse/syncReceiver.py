@@ -9,6 +9,9 @@ import threading
 from LocalStorage import LocalStorage
 import traceback
 
+import webpageBuilder as wp
+import codecs
+
 
 from threading import Event
 from http.server import BaseHTTPRequestHandler
@@ -30,13 +33,40 @@ class syncRequestHandler(BaseHTTPRequestHandler):
             
     def do_GET(self):
         logger.debug("GET: %s"%self.path)
-        if self.path=="/status":
+        # ----------------------------- infos                                        
+        if self.path=="/status.html":
+            self.getOkTextHeader()
+            pg =wp.html(wp.head("status","",""),
+                        wp.body(wp.header("Status"),
+                                "<p>To Be Done</p>"))
+            
+            self.wfile.write(pg.encode())
+        # ----------------------------- provide jquery
+        elif self.path=="/jquery.min.js":
+            with codecs.open("html/jquery.min.js",'r') as f:                       
+                message=f.read()
+                self.wfile.write(message.encode('utf-8'))
+        # ----------------------------- provide css files
+        elif self.path=="/status.css":
+            with codecs.open("html/status.css") as f:                       
+                message=f.read()
+                self.wfile.write(message.encode('utf-8'))
+        # ----------------------------- provide java script
+        elif self.path=="/status.js":
+            with codecs.open("html/kasse.js") as f:                       
+                message=f.read()
+                self.wfile.write(message.encode('utf-8'))        
+        # ----------------------------- provide jquery
+        elif self.path=="/favicon.ico":
+            self.send_response(200)
+            
+        elif self.path=="/status.json":
             self.getOkJsonHeader()
             ls=LocalStorage()
             statusDict=ls.getStatus()
             jsonData=json.dumps(statusDict)
-            self.wfile.write(jsonData.encode())
-        else:           
+            self.wfile.write(jsonData.encode('utf-8'))
+        else:          
             self.send_response(404)
         return
     
@@ -68,7 +98,7 @@ class syncRequestHandler(BaseHTTPRequestHandler):
                 items=ls.getSoldItems(paydeskId, idx, cnt)
                 logger.debug("Sync sold items: %s",items)
                 jsonData=json.dumps(items)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except json.JSONDecodeError as e:
                 logger.error("Invalid json string: %s causes error: %s"%(str(jsonStr),str(e)))
                 self.send_response(404)

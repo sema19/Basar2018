@@ -26,31 +26,6 @@ logger.addHandler(webSyncch)
 webDownloadEvent =threading.Event()
 
 
-def startRequestCheckIn():
-    threading.Thread(name="requestCheckIn", target=requestCheckIn)
-# -------------------------------------------------------------------------
-def requestCheckIn():
-    #url = '''https://K2:54746688@int.basar-teugn.de/kasse'''
-    # ip=1
-    # regid=2
-    ls = LocalStorage()                                                  
-    ret =requestCheckIn()    
-    ip="1"
-    regid="2"
-    url="https://K1:49118570@int.basar-teugn.de/kasse"    
-    data={'modus':'upsync','ip':ip,'registerid':regid,'table':'items',"maxid":mxid,"maxanzahl":cnt}
-    headers = {u'content-type': u'application/x-www-form-urlencoded'}
-    r=requests.post(url,headers=headers,data=data)
-    logger.info(str(r.status_code)+"\n"+str(r.reason))
-    logger.debug(r.text)
-    ret = json.loads(r.text)
-    del ls
-    
-    '''
-    {"items":{"insert":[["4391","11","1","10310168","Schneeanzug einteilig","92","10.00","2016-08-15 18:37:46","2016-08-15 18:38:37"],["4392","11","2","10310267","Winterjacke gef\u00c3\u00bcttert","92","10.00","2016-08-15 18:39:28","2016-08-16 10:27:42"],["4394","43","1","14010163","Winnie the Pooh Rucksack","","4.00","2016-08-16 07:44:25","2017-06-09 17:35:28"]]},"message":"Wiederholter Sync erfolgreich."}
-    '''
-    return ret
-
 # -------------------------------------------------------------------------
 def requestLastModified(url, ip, regid, tblList=["items","users"]):    
     #url = '''https://K2:54746688@int.basar-teugn.de/kasse'''
@@ -154,9 +129,7 @@ def itemsDownload(ls, url, ip, regid,deleteOld=True):
 
 
 # -------------------------------------------------------------------------
-def startWebDownload(url,ip,regid):
-    ip='192.168.2.1'
-    regid='1'       
+def startWebDownload(url,ip,regid):   
     webDownloadThread = threading.Thread(name="webDownload",
                                          target=runWebDownload,
                                          args=[url, ip, regid])

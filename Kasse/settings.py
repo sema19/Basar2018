@@ -65,7 +65,7 @@ class Settings(object):
             self.webSyncIp=self.getEthAdapterIP()        
         self.webSyncRegisterId=self.cfg.get("WebSync","RegisterId",fallback=__webSyncRegisterId__)
         
-                
+        self.extWebserverEnabled = self.cfg.getboolean("ExtWebserver","Enabled",fallback=False)
         self.extWebserverIp = self.cfg.get("ExtWebserver","AdapterIp",fallback="auto")
         if self.extWebserverIp=="auto":
             self.extWebserverIp=self.getEthAdapterIP()

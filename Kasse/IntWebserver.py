@@ -10,6 +10,7 @@ import json
 import threading
 from threading import Event
 #import inspect
+import codecs
 
 import logging
 logger = logging.getLogger('log')
@@ -21,7 +22,7 @@ from syncSender import localSyncEvent
 from LocalStorage import LocalStorage
 from LocalStorage import debugEventLocalStorage
 from webDownload import startWebDownload
-from webDownload import requestCheckIn
+
 #from http.server import BaseHTTPRequestHandler, HTTPServer, SimpleHTTPRequestHandler
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
@@ -110,51 +111,51 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             try:
                 self.getOkJsonHeader()
                 jsonData={"status":"alive"}                 
-                self.wfile.write(json.dumps(jsonData).encode())
+                self.wfile.write(json.dumps(jsonData).encode('utf-8'))
             except Exception as e:
                 logger.error(str(e))
-                self.wfile.write(json.dumps({"msg":str(e),"err":1}).encode())
+                self.wfile.write(json.dumps({"msg":str(e),"err":1}).encode('utf-8'))
             
         # ----------------------------- provide webpages
         # ----------------------------- settings                                        
         elif self.path=="/checkIn.html":
             self.getOkTextHeader()
-            with open("html/checkIn.html",'r') as f:                
+            with codecs.open("html/checkIn.html",'r','utf-8') as f:                
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- transfer
         elif self.path=="/transfer.html":            
             self.getOkTextHeader()
-            with open("html/transfer.html",'r') as f:
+            with codecs.open("html/transfer.html",'r','utf-8') as f:
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- kasse
         elif self.path=="/kasse.html":            
             startSubscriptionUpdateEvent.set()
             self.getOkTextHeader()
-            with open("html/kasse.html",'r') as f:
+            with codecs.open("html/kasse.html",'r','utf-8') as f:
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide jquery
         elif self.path=="/jquery.min.js":
-            with open("html/jquery.min.js") as f:                       
+            with codecs.open("html/jquery.min.js",'r') as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide css files
         elif self.path=="/kasse.css":
-            with open("html/kasse.css") as f:                       
+            with codecs.open("html/kasse.css",'r','utf-8') as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide css files
         elif self.path=="/kasse.js":
-            with open("html/kasse.js") as f:                       
+            with codecs.open("html/kasse.js",'r','utf-8') as f:                       
                 message=f.read()
-            self.wfile.write(message.encode())                
+            self.wfile.write(message.encode('utf-8'))                
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
-            with open("html/icon.png") as f:                       
+            with codecs.open("html/icon.png","r") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         else:            
             logger.error("INVALID PATH LOCAL GET: %s"%self.path)
             self.send_response(404)
@@ -192,15 +193,15 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 else:                                                                        
                     cartId, msg = ls.addToCart(int(bc))
                     jsonData=self.getCartResponse(ls, cartId, 'open', msg=msg)                        
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except RequestError as e:
                 logger.error(str(e))            
                 jsonData=self.getCartResponse(ls, openCartId, 'open', msg=e.msg, error=e.err)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except Exception as e:
                 logger.error(str(e))                               
                 jsonData=self.getCartResponse(ls, openCartId, 'open', msg=str(e), error=1)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             finally:
                 try:
                     del ls
@@ -225,7 +226,6 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                     userItemsRaw=[]
                 ret=ls.addCheckIn(userData[0])
                 ret = LocalStorage.getCheckInSyncInfo()
-                requestCheckIn();
                 userItems=[]
                 for usit in userItemsRaw:
                     userItems.append({"pos":usit[2],"bc":usit[3],"txt":usit[4],"size":usit[5],"price":usit[6]})
@@ -234,11 +234,11 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             except RequestError as e:
                 logger.error(str(e))            
                 jsonData=self.getCartResponse(ls, openCartId, 'open', msg=e.msg, error=e.err)
-                self.wfile.write(jsonData.encode())      
+                self.wfile.write(jsonData.encode('utf-8'))      
             except Exception as e:                
                 logger.error(str(e))                             
                 jsonData=json.dumps({"userInfo":{},"msg":str(e),"error":1})                        
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             finally:
                 try:
                     del ls
@@ -255,7 +255,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             ip = myset.webSyncIp
             startWebDownload(url,ip,webid)
             jsonData=json.dumps({"action":"runWebDownload"})                        
-            self.wfile.write(jsonData.encode())
+            self.wfile.write(jsonData.encode('utf-8'))
             
         # ------------------------------------------------------
         elif self.path=="/initiate_shutdown":
@@ -271,11 +271,11 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 ls = LocalStorage()
                 ret = ls.removeRemotePaydesks()
                 jsonData=json.dumps({"action":"removeRemotePaydesks"})                        
-                self.wfile.write(jsonData.encode())                
+                self.wfile.write(jsonData.encode('utf-8'))                
             except Exception as e:
                 logger.error(str(e))
                 jsonData=json.dumps({"action":"removeRemotePaydesks", "msg":str(e), "error":1})                        
-                self.wfile.write(jsonData.encode())                             
+                self.wfile.write(jsonData.encode('utf-8'))                             
             finally:                
                 try:
                     del ls
@@ -293,10 +293,10 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 usersStats = ls.getUsersStats()                
                 jsonData=json.dumps({"items":itemsStats,"users":usersStats})                
                 self.getOkJsonHeader()                
-                self.wfile.write(jsonData.encode())                
+                self.wfile.write(jsonData.encode('utf-8'))                
             except Exception as e:
                 logger.error(str(e))
-                self.wfile.write(json.dumps({"msg":str(e),"err":1}).encode())                                
+                self.wfile.write(json.dumps({"msg":str(e),"err":1}).encode('utf-8'))                                
             finally:
                 try:
                     del ls
@@ -337,15 +337,15 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 cartId, msg = ls.closeCart()                  
                 ls.sellCart(cartId)
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=msg, error=0)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except RequestError as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=e.msg, error=e.err)                 
-                self.wfile.write(jsonData.encode())                 
+                self.wfile.write(jsonData.encode('utf-8'))                 
             except Exception as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=str(e), error=1)
-                self.wfile.write(jsonData.encode())                
+                self.wfile.write(jsonData.encode('utf-8'))                
             finally:                
                 try:
                     del ls
@@ -365,16 +365,16 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 #TODO: check for the sell at close flag                    
                 ls.sellCart(cartId)
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=msg, error=err)                 
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
                 localSyncEvent.set()
             except RequestError as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=e.msg, error=e.err)                 
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except Exception as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'closed', msg=str(e), error=1)                 
-                self.wfile.write(jsonData.encode())                
+                self.wfile.write(jsonData.encode('utf-8'))                
             finally:                
                 try:
                     del ls
@@ -392,15 +392,15 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 cartId=int(cart[0])                                                
                 cartId, msg = ls.deleteLastArticle(cartId)                 
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=msg, error=err)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except RequestError as e:
                 logger.error("Error: %s"%str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=e.msg, error=e.err)                 
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except Exception as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=str(e), error=1)
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             finally:
                 try:    
                     del ls
@@ -418,15 +418,15 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
                 cartId=int(cart[0])              
                 cartId, msg = ls.deleteArticles(cartId)                    
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=msg, error=err)                
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except RequestError as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=e.msg, error=e.err)                 
-                self.wfile.write(jsonData.encode())
+                self.wfile.write(jsonData.encode('utf-8'))
             except Exception as e:
                 logger.error(str(e))
                 jsonData=self.getCartResponse(ls, cartId, 'open', msg=msg, error=1)                
-                self.wfile.write(jsonData.encode())                
+                self.wfile.write(jsonData.encode('utf-8'))                
             finally:
                 try:    
                     del ls

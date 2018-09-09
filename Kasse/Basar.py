@@ -129,10 +129,11 @@ if __name__ == '__main__':
                                        settings.intWebserverPort, 
                                        settings.startpage))
     
-    # start webserver
-    logger.info("Start External Webserver")
-    ExtWebserver.startExtWebserver(settings.extWebserverIp, settings.extWebserverPort)    
-    
+    if settings.extWebserverEnabled:
+        # start webserver
+        logger.info("Start External Webserver")
+        ExtWebserver.startExtWebserver(settings.extWebserverIp, settings.extWebserverPort)    
+        
     '''
     while(1):
         
