@@ -102,7 +102,10 @@ class syncRequestHandler(BaseHTTPRequestHandler):
                 items=ls.getSoldItems(paydeskId, idx, cnt)
                 logger.debug("-------- Response to %s: sync sold items: new entries: %s, old index:%s",sourcePaydeskId, str(len(items)),str(idx))
                 if len(items)>0:
-                    logger.debug("Items synced:\n"+"\n".join(items))
+                    try:
+                        logger.debug("Items synced:\n"+"\n".join(items[0]))
+                    except Exception as e:
+                        logger.error("Not able to show items synced: "+str(e))
                 jsonData=json.dumps(items)
                 self.wfile.write(jsonData.encode('utf-8'))
             except json.JSONDecodeError as e:
