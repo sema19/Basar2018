@@ -7,7 +7,7 @@ Created on Sep 6, 2018
 import logging
 dblogger = logging.getLogger('db')
 dblogger.setLevel(logging.INFO)
-dbfh = logging.FileHandler("db.log")
+dbfh = logging.FileHandler("log/db.log")
 dbfh.setLevel(logging.DEBUG)
 dbch = logging.StreamHandler()
 dbch.setLevel(logging.DEBUG)
