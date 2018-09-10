@@ -13,6 +13,7 @@ import re
 from pprint import pformat
 import sys
 import signal
+import socket
 
 
 
@@ -174,7 +175,19 @@ if __name__ == '__main__':
                 if not threadsRunning[t]["id"].is_alive():                                        
                     logger.info("Thread %s NOT alive"%(str(t)))
         '''
+    
     stopAllEvent.wait()
+    syncReceiver.stopEvent.set()    
+    syncReceiver.isStoppedEvent.wait(5)
+    
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)                                      #2 Second Timeout
+    result = sock.connect_ex((settings.localSyncIp,settings.localSyncPort))
+    if result == 0:
+        logger.info('sync port OPEN')
+    else:
+        logger.info('sync port CLOSED, connect_ex returned: '+str(result))
+    
     logger.info("GOODBYE!!!")
     sys.exit(0)
         

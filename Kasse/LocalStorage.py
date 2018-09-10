@@ -187,9 +187,14 @@ class LocalStorage(object):
     
     # -------------------------------------------------------------------------    
     def __del__(self):             
-        self.traceConn("DESTR")        
-        self.conn.close()
+        self.traceConn("DESTR")   
         try:
+            self.conn.close()
+        except:
+            logger.error("Error at closing")
+            logger.error(traceback.format_exc())             
+        try:
+            
             localStorageLock.release()
         except:
             pass        

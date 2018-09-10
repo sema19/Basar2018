@@ -9,6 +9,7 @@ import time
 import traceback
 import socket
 import json
+from sys import platform
 
 import logging
 logger = logging.getLogger('sync')
@@ -103,9 +104,12 @@ def stopSubscriberListener():
 def runSubscriberListener(ip,port):
     subscriberListenerStopEvent.clear()
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    ipa=ip.split('.')[0:3]
-    ipa.append('255')
-    sock.bind(('.'.join(ipa), port))
+    if platform=="linux" or platform=="linux2":
+        ipa=ip.split('.')[0:3]
+        ipa.append('255')
+        sock.bind(('.'.join(ipa), port))
+    else:
+        sock.bind((ip, port))
     logger.info("START SUBSCRIBER LISTENER AT %s:%s"%(str(ip),str(port)))    
     while True:
         # wait for message

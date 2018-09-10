@@ -153,7 +153,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             self.wfile.write(message.encode('utf-8'))                
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
-            with codecs.open("html/icon.png","r") as f:                       
+            with open("html/icon.png","rb") as f:                       
                 message=f.read()
                 self.wfile.write(message)
         else:            

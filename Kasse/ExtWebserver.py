@@ -168,9 +168,10 @@ def runExtWebserverShutdownObserver(shutdownEvent):
              
 # ------------------------------------------------------
 def runExtWebserver(ip, port):
+    #ip='127.0.0.1'
     global __extWebserverInst__
     logger.info('starting local server...')
-    server_address = (ip, port)    #8082)
+    server_address = (ip, int(port))    #8082)
     __extWebserverInst__ = HTTPServer(server_address, extRequestHandler)
     logger.info('running local webserver...')
     __extWebserverInst__.serve_forever()

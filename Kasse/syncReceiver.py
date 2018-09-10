@@ -11,6 +11,7 @@ import traceback
 
 import webpageBuilder as wp
 import codecs
+import socket
 
 
 from threading import Event
@@ -63,9 +64,12 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         elif self.path=="/status.json":
             self.getOkJsonHeader()
             ls=LocalStorage()
-            statusDict=ls.getStatus()
-            jsonData=json.dumps(statusDict)
-            self.wfile.write(jsonData.encode('utf-8'))
+            try:
+                statusDict=ls.getStatus()
+                jsonData=json.dumps(statusDict)
+                self.wfile.write(jsonData.encode('utf-8'))
+            finally:
+                del ls
         else:          
             self.send_response(404)
         return
@@ -106,14 +110,26 @@ class syncRequestHandler(BaseHTTPRequestHandler):
                 print("Error: %s"%str(e))
                 print(traceback.format_exc())
                 self.send_response(404)
+            finally:
+                del ls
         else:
             self.send_response(404)     
         return
 
 __syncServer__ = None
 stopEvent = threading.Event()
+isStoppedEvent = threading.Event()
 
 def startSyncWebserver(ip,port):
+    
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(2)                                      #2 Second Timeout
+    result = sock.connect_ex((ip,port))
+    if result == 0:
+        logger.info('sync port OPEN')
+    else:
+        logger.info('sync port CLOSED, connect_ex returned: '+str(result))
+        
     stopEvent.clear()
     syncWebserverThread = threading.Thread(name="syncWebserver", target=runSyncWebserver, args=[ip,port])
     syncWebserverThread.start()
@@ -123,10 +139,17 @@ def syncWebserverObserver():
     stopEvent.wait()
     __syncServer__.shutdown()
     
-def runSyncWebserver(ip, port):    
+def stopSyncWebserver():
+    isStoppedEvent.clear()
+    stopEvent.set()  
+    return isStoppedEvent  
+    
+def runSyncWebserver(ip, port):
+    #ip="127.0.0.1"
     logger.info('start sync server at %s:%d...'%(ip,port))     
     # Choose port 8080, for port 80, which is normally used for a http server, you need root access    
     __syncServer__ = HTTPServer((ip,port), syncRequestHandler)
     logger.info('running sync webserver...')
     __syncServer__.serve_forever()
     logger.info('shutdown sync webserver, closing thread...')
+    isStoppedEvent.set()
