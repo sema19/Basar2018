@@ -14,7 +14,7 @@ from LocalStorage import LocalStorage
 import logging
 logger = logging.getLogger('webSync')
 logger.setLevel(logging.DEBUG)
-webSyncfh = logging.FileHandler("webSync.log")
+webSyncfh = logging.FileHandler("log/webSync.log")
 webSyncfh.setLevel(logging.DEBUG)
 webSyncch = logging.StreamHandler()
 webSyncch.setLevel(logging.DEBUG)

@@ -23,33 +23,44 @@ localSyncStopEvent = threading.Event()
 
 
 # ---------------------------------------------------------------------------  
-def updatePaydesk(ls,paydesk):
+def updatePaydesk(paydesk):
     ''' Update sold items with all sold items of other playdesks    
     '''
-    logger.debug("Update Paydesk:"+str(paydesk))
+    #logger.debug("Update Paydesk:"+str(paydesk))
     paydeskId=paydesk[0].strip("\n\r\t ")
     syncIp=paydesk[4].strip("\n\r\t ")
     syncPort=paydesk[5]
+    
+    ls = LocalStorage()
     paydeskCnt=ls.getSoldPaydeskCnt(paydeskId)
     localPaydesk = ls.getLocalPaydesk()
+    ls.disconnect()
     localPaydeskId = localPaydesk[0]            
     url = "http://%s:%d/sync"%(syncIp,int(syncPort))    #/?idx=%d'''%(ip,port,idx)
     params=json.dumps({'source':localPaydeskId,'paydeskId':paydeskId,'idx':paydeskCnt,'cnt':50}).encode()
     headers={'content-type':u'application/json'}
-    logger.debug("URL: "+str(url)+", Data: "+str(params))
+    logger.debug("Request remote paydesk data: URL: "+str(url)+", Data: PaydeskCnt:"+str(paydeskCnt))
     requestTime = datetime.now()
     try:
         # request updated items from remote machine        
         r=requests.post(url, data=params, headers=headers)        
-        logger.debug(str(r.status_code)+", "+str(r.reason)+", "+str(r.text))
+        #logger.debug(str(r.status_code)+", "+str(r.reason)+", "+str(r.text))
         items=json.loads(r.text)         # r.text holds the payload data
+        ls.connect()
         ls.addRemoteSoldItems(items)
-        ls.writeSyncRequest(paydeskId,len(items))
+        ls.writeSyncRequest(paydeskId,len(items))        
     except requests.exceptions.ConnectionError as e:
         ls.writeFailedSyncRequest(paydeskId, requestTime)
         logger.debug("Connection refused to %s:%s Error:%s"%(str(syncIp),str(syncPort),str(e)))
     except Exception as e:
-        logger.error(e)
+        logger.error(str(e))
+    finally:
+        try:
+            ls.disconnect()
+        except Exception as e:
+            logger.error("Disconnect failed: "+str(e))
+            
+        
 
 # ---------------------------------------------------------------------------
 def startLocalSync():
@@ -78,25 +89,24 @@ def runLocalSync(syncEvent, stopEvent):
             logger.info("local sync stop")
             break
         
-        ls = LocalStorage()
         try:
-            # get items                    
-            paydesks=ls.getRemotePaydesks()            
+            # get items
+            ls = LocalStorage()                    
+            paydesks=ls.getRemotePaydesks()
+            del ls            
             if len(paydesks)>0:
                 if paydesks==None:
                     raise Exception("no paydesks found")
                 
-                logger.debug("iterate through remote paydesks (%d)"%len(paydesks))        
+                logger.debug("-------- iterate through remote paydesks (%d)"%len(paydesks))        
                 for paydesk in paydesks:
                     try:
-                        updatePaydesk(ls,paydesk)
+                        updatePaydesk(paydesk)
                     except:
                         logger.error(traceback.format_exc())
                         
         except Exception as e:
             logger.error(e)
-        finally:
-            del ls        
             
         
 # ---------------------------------------------------------------------------

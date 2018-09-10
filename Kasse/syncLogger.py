@@ -8,7 +8,7 @@ import logging
 
 synclogger = logging.getLogger('sync')
 synclogger.setLevel(logging.DEBUG)
-syncfh = logging.FileHandler("sync.log")
+syncfh = logging.FileHandler("log/sync.log")
 syncfh.setLevel(logging.DEBUG)
 syncch = logging.StreamHandler()
 syncch.setLevel(logging.INFO)

@@ -12,8 +12,17 @@ import json
 from sys import platform
 
 import logging
-logger = logging.getLogger('sync')
-logger.setLevel(logging.INFO)
+
+logger = logging.getLogger('subscription')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("log/subscription.log")
+fh.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+fmtr = logging.Formatter("%(threadName)s %(asctime)s  %(levelname)s: %(message)s","%H:%M:%S")
+ch.setFormatter(fmtr)
+logger.addHandler(fh)
+logger.addHandler(ch)
 
 from LocalStorage import LocalStorage
 stopAllEvent=threading.Event()
@@ -45,12 +54,16 @@ def stopSubscriberUpdater():
 def runSubscriberUpdater(port):
     logger.info("START SUBSCRIBER UPDATER TO PORT %s"%(str(port)))
     subscriberSenderStopEvent.clear()
-    broadcastSendCnt=0        
+    broadcastSendCnt=0
+    triggerTxt=""        
     while(True):        
-        logger.debug("SUBSCRIBER UPDATER - WAIT FOR PUBLISH EVENT")
+        #logger.debug("SUBSCRIBER UPDATER - WAIT FOR PUBLISH EVENT")
         evRet=publishEvent.wait(30)     # set publish event on new cart sold or after 30 seconds
         if evRet:
-            logger.debug("publish event received")        
+            triggerTxt="EVENT"
+            #logger.debug("publish event received")
+        else:
+            triggerTxt="TIMEOUT(30s)"        
         publishEvent.clear()
         publish=True        
         try:
@@ -65,11 +78,11 @@ def runSubscriberUpdater(port):
                         logger.debug("send publish broadcast bye!")
                         action="bye"
                     else:
-                        logger.debug("send publish broadcast")
+                        logger.debug("-> BROADCAST(%s) %d: SyncInfo:%s, %s:%s"%(triggerTxt,broadcastSendCnt, ret[1],ret[4],str(ret[5])))
                         action="subscribe"                    
                     json_subscribe=json.dumps({"action":action,"paydeskId":ret[0],"name":ret[1],"created":ret[2],"updated":ret[3],"syncIp":ret[4], "syncPort":ret[5]})
-                    if broadcastSendCnt%10:
-                        logger.debug("Broadcast:"+str(json_subscribe))
+                    #if broadcastSendCnt%10:
+                    #    logger.debug("Broadcast:"+str(json_subscribe))
                     broadcastSendCnt+=1
                     sock.sendto(str(json_subscribe).encode('utf-8'), ('192.168.2.255', port))     #192.168.255.255
                     broadcastSentEvent.set()
@@ -108,9 +121,10 @@ def runSubscriberListener(ip,port):
         ipa=ip.split('.')[0:3]
         ipa.append('255')
         sock.bind(('.'.join(ipa), port))
+        logger.info("START SUBSCRIBER LISTENER AT %s:%s (LINUX:%s)"%(str(ip),str(port),str(ipa)))
     else:
         sock.bind((ip, port))
-    logger.info("START SUBSCRIBER LISTENER AT %s:%s"%(str(ip),str(port)))    
+        logger.info("START SUBSCRIBER LISTENER AT %s:%s (WINDOWS)"%(str(ip),str(port)))    
     while True:
         # wait for message
         #logger.debug("Wait for receive")

@@ -100,15 +100,17 @@ class syncRequestHandler(BaseHTTPRequestHandler):
                 ls.writeSyncRequestReceived(sourcePaydeskId,idx)
                 paydeskIdRef = ls.getLocalPaydesk()[0]                
                 items=ls.getSoldItems(paydeskId, idx, cnt)
-                logger.debug("Sync sold items: %s",items)
+                logger.debug("-------- Response to %s: sync sold items: new entries: %s, old index:%s",sourcePaydeskId, str(len(items)),str(idx))
+                if len(items)>0:
+                    logger.debug("Items synced:\n"+"\n".join(items))
                 jsonData=json.dumps(items)
                 self.wfile.write(jsonData.encode('utf-8'))
             except json.JSONDecodeError as e:
                 logger.error("Invalid json string: %s causes error: %s"%(str(jsonStr),str(e)))
                 self.send_response(404)
             except Exception as e:
-                print("Error: %s"%str(e))
-                print(traceback.format_exc())
+                logger.error("Error Received Sync: %s"%str(e))
+                logger.error(traceback.format_exc())
                 self.send_response(404)
             finally:
                 del ls

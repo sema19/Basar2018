@@ -15,7 +15,8 @@ import sys
 import signal
 import socket
 
-
+if not os.path.exists("log"):
+    os.makedirs("log")
 
 from basarLogger import logger
 

@@ -7,7 +7,7 @@ Created on Aug 24, 2018
 import logging
 logger = logging.getLogger('log')   
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler("basar.log")
+fh = logging.FileHandler("log/basar.log")
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
