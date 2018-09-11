@@ -33,33 +33,37 @@ def updatePaydesk(paydesk):
     
     ls = LocalStorage()
     paydeskCnt=ls.getSoldPaydeskCnt(paydeskId)
-    localPaydesk = ls.getLocalPaydesk()
-    ls.disconnect()
+    localPaydesk = ls.getLocalPaydesk()    
+    del ls
+    ls=None
     localPaydeskId = localPaydesk[0]            
     url = "http://%s:%d/sync"%(syncIp,int(syncPort))    #/?idx=%d'''%(ip,port,idx)
     params=json.dumps({'source':localPaydeskId,'paydeskId':paydeskId,'idx':paydeskCnt,'cnt':50}).encode()
     headers={'content-type':u'application/json'}
     logger.debug("Request remote paydesk data: URL: "+str(url)+", Data: PaydeskCnt:"+str(paydeskCnt))
     requestTime = datetime.now()
+    failed=False
     try:
         # request updated items from remote machine        
         r=requests.post(url, data=params, headers=headers)        
         #logger.debug(str(r.status_code)+", "+str(r.reason)+", "+str(r.text))
         items=json.loads(r.text)         # r.text holds the payload data
-        ls.connect()
+        ls = LocalStorage()
         ls.addRemoteSoldItems(items)
-        ls.writeSyncRequest(paydeskId,len(items))        
-    except requests.exceptions.ConnectionError as e:
+        ls.writeSyncRequest(paydeskId,len(items))
+    except requests.exceptions.ConnectionError as e:        
+        failed=True
+        logger.debug("Connection refused to %s:%s"%(str(syncIp),str(syncPort)))
+        if ls==None:
+            ls = LocalStorage()
         ls.writeFailedSyncRequest(paydeskId, requestTime)
-        logger.debug("Connection refused to %s:%s Error:%s"%(str(syncIp),str(syncPort),str(e)))
     except Exception as e:
         logger.error(str(e))
     finally:
         try:
-            ls.disconnect()
+            del ls
         except Exception as e:
-            logger.error("Disconnect failed: "+str(e))
-            
+            logger.error("Disconnect failed: "+str(e))       
         
 
 # ---------------------------------------------------------------------------

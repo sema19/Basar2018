@@ -18,6 +18,7 @@ from Errors import RequestError
 
 from dbLogger import dblogger as logger
 
+__conn_cnt__=0
 __conn_cnt_init__=0
 __conn_cnt_connect__=0
 __disconn_cnt_destr__=0
@@ -41,7 +42,7 @@ class LocalStorage(object):
         #self.__log__("LOAD DATABASE: %s"%self.db_file)
         self.paydeskArticleCnt=None        
         self.cartId=None
-        self.pos=None
+        self.pos=None        
         self.traceConn("INIT")
         self.paydesksInfo=None        
         self.conn =sqlite3.connect(self.db_file)            
@@ -68,21 +69,26 @@ class LocalStorage(object):
             global __disconn_cnt_destr__
             global __disconn_cnt_disconn__
             if action=="INIT":
-                __conn_cnt_init__+=1            
-                print("CONN_CNT_INIT: %d"%__conn_cnt_init__)
+                __conn_cnt_init__+=1
+                __conn_cnt__+=1
+                if __conn_cnt__>1:
+                    logger.info("DB INSTANCE CNT: %d"%__conn_cnt__)
+                    logger.debug(traceback.format_exc())             
+                #print("CONN_CNT_INIT: %d"%__conn_cnt_init__)
             elif action=="CONNECT":
                 __conn_cnt_connect__+=1
-                print("CONN_CNT_CONNECT: %d"%__conn_cnt_connect__)        
+                #print("CONN_CNT_CONNECT: %d"%__conn_cnt_connect__)        
             elif action=="DISCONNECT":
                 __disconn_cnt_disconn__+=1        
-                print("DISCONN_CNT_DISCONN: %d"%__disconn_cnt_disconn__)
+                #print("DISCONN_CNT_DISCONN: %d"%__disconn_cnt_disconn__)
                 bcnt=(__conn_cnt_init__+__conn_cnt_connect__)-(__disconn_cnt_destr__+__disconn_cnt_disconn__)
-                print("BALANCE: %d"%bcnt)
+                #print("BALANCE: %d"%bcnt)
             elif action=="DESTR":
+                __conn_cnt__-=1
                 __disconn_cnt_destr__+=1
-                print("DISCONN_CNT_DESTR: %d"%__disconn_cnt_destr__)
-                bcnt=(__conn_cnt_init__+__conn_cnt_connect__)-(__disconn_cnt_destr__+__disconn_cnt_disconn__)
-                print("BALANCE: %d"%bcnt)
+                #print("DISCONN_CNT_DESTR: %d"%__disconn_cnt_destr__)
+                #bcnt=(__conn_cnt_init__+__conn_cnt_connect__)-(__disconn_cnt_destr__+__disconn_cnt_disconn__)
+                #print("BALANCE: %d"%bcnt)
                 
     # -------------------------------------------------------------------------
     def __log__(self, *args, **kwargs):    
