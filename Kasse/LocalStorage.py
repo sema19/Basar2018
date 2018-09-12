@@ -431,9 +431,14 @@ class LocalStorage(object):
                     logger.info("Create Local Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
                     stmt="INSERT INTO paydesks ('paydeskId', 'name', 'created', 'updated', 'syncIp', 'syncPort', 'remote') "
                     stmt+="VALUES ('%s','%s','%s','%s','%s',%d,%d)"%(paydeskId,name,tnow,tnow,syncIp,syncPort,0)
-                    self.dbWrite(stmt)                                    
+                    self.dbWrite(stmt)
             else:
-                logger.info("Local Paydesk already exists: %s"%str(ret))                                               
+                if name!=ret[1] or syncIp!=ret[4] or syncPort!=ret[5]:
+                    logger.info("Update Local Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
+                    stmt="UPDATE paydesks SET 'name'='%s', 'updated'='%s', 'syncIp'='%s', 'syncPort'=%d where remote=0"%(name,datetime.now(),syncIp,syncPort)
+                    self.dbWrite(stmt)
+                else:                    
+                    logger.info("Local Paydesk already exists: %s"%str(ret))                                               
         finally:
             self.releaseDbAccessInt()
     
@@ -456,6 +461,11 @@ class LocalStorage(object):
                 stmt+="VALUES ('%s','%s','%s','%s','%s',%d,%d)"%(paydeskId, name, created, updated, syncIp, syncPort, 1)
                 ret = self.dbWrite(stmt)
                 return self.dbQueryOne("SELECT * from paydesks WHERE paydeskId='%s'"%paydeskId)
+            else:
+                if name!=ret[1] or syncIp!=ret[4] or syncPort!=ret[5] or updated!=ret[3]:
+                    logger.info("Update Remote Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
+                    stmt="UPDATE paydesks SET 'name'='%s', 'updated'='%s', 'syncIp'='%s', 'syncPort'=%d where remote=0"%(name,datetime.now(),syncIp,syncPort)
+                    self.dbWrite(stmt)
         except Exception as e:
             self.__log__(traceback.format_exc())
             return None            
