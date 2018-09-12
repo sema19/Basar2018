@@ -461,7 +461,7 @@ class LocalStorage(object):
             else:
                 if name!=ret[1] or syncIp!=ret[4] or syncPort!=ret[5] or updated!=ret[3]:
                     logger.info("Update Remote Paydesk %s, %s:%d"%(name,syncIp,syncPort))            
-                    stmt="UPDATE paydesks SET 'name'='%s', 'updated'='%s', 'syncIp'='%s', 'syncPort'=%d where remote=0"%(name,datetime.now(),syncIp,syncPort)
+                    stmt="UPDATE paydesks SET 'name'='%s', 'updated'='%s', 'syncIp'='%s', 'syncPort'=%d where paydeskId='%s'"%(name,datetime.now(),syncIp,syncPort,paydeskId)
                     self.dbWrite(stmt)
         except Exception as e:
             self.__log__(traceback.format_exc())
