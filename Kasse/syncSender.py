@@ -21,6 +21,8 @@ from syncLogger import synclogger as logger
 localSyncEvent = threading.Event()
 localSyncStopEvent = threading.Event()
 
+import stopAll
+
 
 # ---------------------------------------------------------------------------  
 def updatePaydesk(paydesk):
@@ -42,7 +44,6 @@ def updatePaydesk(paydesk):
     headers={'content-type':u'application/json'}
     logger.debug("Request remote paydesk data: URL: "+str(url)+", Data: PaydeskCnt:"+str(paydeskCnt))
     requestTime = datetime.now()
-    failed=False
     try:
         # request updated items from remote machine        
         r=requests.post(url, data=params, headers=headers)        
@@ -51,8 +52,7 @@ def updatePaydesk(paydesk):
         ls = LocalStorage()
         ls.addRemoteSoldItems(items)
         ls.writeSyncRequest(paydeskId,len(items))
-    except requests.exceptions.ConnectionError as e:        
-        failed=True
+    except requests.exceptions.ConnectionError as e:                
         logger.debug("Connection refused to %s:%s"%(str(syncIp),str(syncPort)))
         if ls==None:
             ls = LocalStorage()
@@ -73,7 +73,9 @@ def startLocalSync():
     
     localSyncThread = threading.Thread(name="localSync",target=runLocalSync,
                                        args=[localSyncEvent,localSyncStopEvent])
-    localSyncThread.start()    
+    localSyncThread.start() 
+    stopAll.AddShutdownEvent(localSyncStopEvent)
+    stopAll.AddShutdownEvent(localSyncEvent)   
     return localSyncStopEvent
         
 # ---------------------------------------------------------------------------        
@@ -84,7 +86,7 @@ def runLocalSync(syncEvent, stopEvent):
     localSyncStopEvent.clear()
     
     while(1):
-        ev = localSyncEvent.wait(10)
+        ev = localSyncEvent.wait(10)        
         if ev:
             logger.info("local sync by event")
         localSyncEvent.clear()

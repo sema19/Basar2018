@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 
 from syncLogger import synclogger as logger
-
+import stopAll
 
 # HTTPRequestHandler class
 class syncRequestHandler(BaseHTTPRequestHandler):
@@ -37,11 +37,9 @@ class syncRequestHandler(BaseHTTPRequestHandler):
         # ----------------------------- infos                                        
         if self.path=="/status.html":
             self.getOkTextHeader()
-            pg =wp.html(wp.head("status","",""),
-                        wp.body(wp.header("Status"),
-                                "<p>To Be Done</p>"))
-            
-            self.wfile.write(pg.encode())
+            with codecs.open("html/status.html",'r','utf-8') as f:                
+                message=f.read()
+                self.wfile.write(message.encode('utf-8'))            
         # ----------------------------- provide jquery
         elif self.path=="/jquery.min.js":
             with codecs.open("html/jquery.min.js",'r') as f:                       
@@ -136,20 +134,23 @@ def startSyncWebserver(ip,port):
         logger.info('sync port CLOSED, connect_ex returned: '+str(result))
         
     stopEvent.clear()
+    stopAll.AddShutdownEvent(stopEvent)
+    
     syncWebserverThread = threading.Thread(name="syncWebserver", target=runSyncWebserver, args=[ip,port])
     syncWebserverThread.start()
+    
+    syncWebserverObserverThread = threading.Thread(name="syncWebserverObserver", target=syncWebserverObserver)
+    syncWebserverObserverThread.start()
     return stopEvent
     
 def syncWebserverObserver():
+    global __syncServer__
     stopEvent.wait()
     __syncServer__.shutdown()
     
-def stopSyncWebserver():
-    isStoppedEvent.clear()
-    stopEvent.set()  
-    return isStoppedEvent  
     
 def runSyncWebserver(ip, port):
+    global __syncServer__
     #ip="127.0.0.1"
     logger.info('start sync server at %s:%d...'%(ip,port))     
     # Choose port 8080, for port 80, which is normally used for a http server, you need root access    

@@ -12,6 +12,7 @@ import json
 from sys import platform
 
 import logging
+import stopAll
 
 logger = logging.getLogger('subscription')
 logger.setLevel(logging.DEBUG)
@@ -42,11 +43,13 @@ def startSubscriberUpdater(broadcastPort):
                                         target=runSubscriberUpdater,
                                         args=[broadcastPort])
     subscriberSender.start()
+    stopAll.AddShutdownEvent(subscriberSenderStopEvent)
+    stopAll.AddShutdownEvent(publishEvent)
 
 def triggerSubscriberUpdater():
     publishEvent.set()
     
-def stopSubscriberUpdater():
+def stopSubscriberUpdater():    
     subscriberSenderStopEvent.set()
     publishEvent.set()
     
@@ -109,9 +112,8 @@ def startSubscriberListener(broadcastIp, broadcastPort):
                                           target=runSubscriberListener,
                                           args=[broadcastIp,broadcastPort])
     subscriberListener.start()
-
-def stopSubscriberListener():
-    subscriberListenerStopEvent.set()
+    stopAll.AddShutdownEvent(subscriberListenerStopEvent)   # triggers a stop
+    stopAll.AddShutdownEvent(publishEvent)      # triggers a send
     
 
 def runSubscriberListener(ip,port):

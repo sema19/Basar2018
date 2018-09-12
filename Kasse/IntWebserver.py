@@ -16,6 +16,7 @@ import logging
 logger = logging.getLogger('log')
 
 #from Cart import Cart
+import stopAll
 from service_Subscription import startSubscriptionUpdateEvent
 from service_Subscription import publishEvent
 from syncSender import localSyncEvent
@@ -31,7 +32,6 @@ from Errors import RequestError
 
 import settings
 
-stopAllRequested=Event()
 
 
 
@@ -156,6 +156,10 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
             with open("html/icon.png","rb") as f:                       
                 message=f.read()
                 self.wfile.write(message)
+        # ----------------------------- provide jquery
+        elif self.path=="/stopAllNow":            
+            self.send_response(200)
+            stopAll.Stop()
         else:            
             logger.error("INVALID PATH LOCAL GET: %s"%self.path)
             self.send_response(404)
@@ -448,6 +452,8 @@ def startIntWebserver(port):
      
     logger.info('create shutdown event')
     shutdownEvent = Event()
+    stopAll.AddShutdownEvent(shutdownEvent)
+    
     
     logger.info('start observer')
     intWebsrvShutdownObserver = threading.Thread(name="intWebsvrShutdown",target=runIntWebserverShutdownObserver, args=[shutdownEvent])

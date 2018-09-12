@@ -12,7 +12,7 @@ import subprocess
 import re
 from pprint import pformat
 import sys
-import signal
+
 import socket
 
 if not os.path.exists("log"):
@@ -41,18 +41,16 @@ import syncReceiver
 from settings import settingsInst
 import requests
 from LocalStorage import debugEventLocalStorage
-from IntWebserver import stopAllRequested
 
-stopAllEvent = threading.Event()
+import stopAll
+
+stopMainEvent = threading.Event()
+byeEvent=threading.Event()
+
 
 threadsRunning={}
 
 
-#def signal_handler(signal, frame):
-#    print("\nprogram exiting gracefully")
-#    stopAllEvent.set()
-    
-#signal.signal(signal.SIGINT, signal_handler)
 
 
 '''    
@@ -81,7 +79,9 @@ if __name__ == '__main__':
     logger.info("RUN BASAR IN %s"%os.getcwd())    
     
     pid = os.getpid()
-    logger.info("RUN AS PID: %s"%str(pid))    
+    logger.info("RUN AS PID: %s"%str(pid))
+    
+    stopAll.AddShutdownEvent(stopMainEvent)
     
     # load settings
     settings=settingsInst        
@@ -177,18 +177,9 @@ if __name__ == '__main__':
                     logger.info("Thread %s NOT alive"%(str(t)))
         '''
     
-    stopAllEvent.wait()
-    syncReceiver.stopEvent.set()    
-    syncReceiver.isStoppedEvent.wait(5)
-    
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(2)                                      #2 Second Timeout
-    result = sock.connect_ex((settings.localSyncIp,settings.localSyncPort))
-    if result == 0:
-        logger.info('sync port OPEN')
-    else:
-        logger.info('sync port CLOSED, connect_ex returned: '+str(result))
-    
+    stopMainEvent.wait()
+    stopAll.WaitForBye(5)
+        
     logger.info("GOODBYE!!!")
     sys.exit(0)
         

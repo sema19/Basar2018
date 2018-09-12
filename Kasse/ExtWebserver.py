@@ -23,6 +23,10 @@ from LocalStorage import LocalStorage
 from basarLogger import logger
 import webpageBuilder as wp
 
+import stopAll
+
+import codecs
+
 
 
 # HTTPRequestHandler class
@@ -47,39 +51,34 @@ class extRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logger.debug("GET: %s"%self.path)
         
-        # ----------------------------- infos                                        
+        # ----------------------------- infos
+                                                        
         if self.path=="/status.html":
             self.getOkTextHeader()
-            pg =wp.html(wp.head("status","",""),
-                        wp.body(wp.header("Status"),
-                                "<p>To Be Done</p>"))
-            
-            self.wfile.write(pg.encode())
+            with codecs.open("html/status.html",'r','utf-8') as f:                
+                message=f.read()
+                self.wfile.write(message.encode('utf-8'))
+        
         # ----------------------------- provide jquery
         elif self.path=="/jquery.min.js":
-            with open("html/jquery.min.js") as f:                       
+            with codecs.open("html/jquery.min.js",'r','utf-8') as f:                       
                 message=f.read()
                 self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide css files
         elif self.path=="/status.css":
-            with open("html/status.css") as f:                       
+            with codecs.open("html/status.css",'r','utf-8') as f:                       
                 message=f.read()
                 self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide java script
         elif self.path=="/status.js":
-            with open("html/kasse.js") as f:                       
+            with codecs.open("html/status.js",'r','utf-8') as f:                       
                 message=f.read()
                 self.wfile.write(message.encode('utf-8'))        
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
             self.send_response(200)
             
-        elif self.path=="/status.json":
-            self.getOkJsonHeader()
-            ls=LocalStorage()
-            statusDict=ls.getStatus()
-            jsonData=json.dumps(statusDict)
-            self.wfile.write(jsonData.encode('utf-8'))                    
+                        
         else:            
             self.send_response(404)
         return 
@@ -101,9 +100,7 @@ class extRequestHandler(BaseHTTPRequestHandler):
                 print("Error: %s"%str(e))
                 print(traceback.format_exc())
                 self.send_response(404)
-                
-                
-        if self.path=="/status":
+        elif self.path=="/status":
             try:
                 self.getOkJsonHeader()                
                 jsonDataIn=json.loads(self.getRawData())
@@ -119,6 +116,12 @@ class extRequestHandler(BaseHTTPRequestHandler):
                 print("Error: %s"%str(e))
                 print(traceback.format_exc())
                 self.send_response(404)
+        elif self.path=="/status.json":
+            self.getOkJsonHeader()
+            ls=LocalStorage()
+            statusDict=ls.getStatus()
+            jsonData=json.dumps(statusDict)
+            self.wfile.write(jsonData.encode('utf-8'))    
         else:
             self.send_response(404)     
         return
@@ -153,6 +156,7 @@ def startExtWebserver(ip, port):
      
     logger.info('create shutdown event')
     shutdownEvent = Event()
+    stopAll.AddShutdownEvent(shutdownEvent)
     
     logger.info('start observer')
     extWebsrvShutdownObserver = threading.Thread(name="extWebsvrShutdown",target=runExtWebserverShutdownObserver, args=[shutdownEvent])
