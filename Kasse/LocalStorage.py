@@ -16,7 +16,7 @@ import re
 
 from Errors import RequestError
 
-from dbLogger import dblogger as logger
+from dbLogger import logger
 
 __conn_cnt__=0
 __conn_cnt_init__=0
@@ -52,12 +52,9 @@ class LocalStorage(object):
         
     def setup(self, paydeskName, syncIp, syncPort):
         self.createTables()        
-        paydesk = self.getLocalPaydesk()        
-        if paydesk==None:
-            logger.info("Create new local paydesk: %s, %s:%d"%(paydeskName,syncIp,syncPort))
-            paydesk=self.createLocalPaydesk(paydeskName,syncIp,syncPort)
-        else:
-            logger.info("Local paydesk: %s"%(str(paydesk)))
+        logger.info("Check local paydesk: %s, %s:%d"%(paydeskName,syncIp,syncPort))
+        paydesk=self.createLocalPaydesk(paydeskName,syncIp,syncPort)
+        logger.info("Local paydesk: %s"%(str(paydesk)))
         return paydesk
             
     # -------------------------------------------------------------------------

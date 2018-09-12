@@ -5,15 +5,16 @@ Created on Sep 6, 2018
 '''
 
 import logging
-dblogger = logging.getLogger('db')
-dblogger.setLevel(logging.INFO)
-dbfh = logging.FileHandler("log/db.log")
-dbfh.setLevel(logging.DEBUG)
-dbch = logging.StreamHandler()
-dbch.setLevel(logging.DEBUG)
-dbformatter = logging.Formatter("%(threadName)s %(asctime)s  %(levelname)s: %(message)s","%H:%M:%S")
-dbch.setFormatter(dbformatter)
-dblogger.addHandler(dbfh)
-dblogger.addHandler(dbch)
+logger = logging.getLogger('db')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("log/db.log")
+fh.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+dbf = logging.Formatter("%(threadName)s %(asctime)s  %(levelname)s: %(message)s","%H:%M:%S")
+fh.setFormatter(dbf)
+ch.setFormatter(dbf)
+logger.addHandler(fh)
+logger.addHandler(ch)
 
 
