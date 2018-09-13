@@ -11,6 +11,8 @@ import json
 import threading
 from LocalStorage import LocalStorage
 
+import configparser
+
 import logging
 logger = logging.getLogger('webSync')
 logger.setLevel(logging.DEBUG)
@@ -146,6 +148,13 @@ def runWebDownload(url,ip,regid):
     logger.info("-"*30)
     del ls
     
-    
+if __name__ == '__main__':
+    cfg = configparser.ConfigParser()
+    cfg.read('websync.cfg')
+     
+    url=cfg.get("WebSync","Url")
+    ip = cfg.get("WebSync","AdapterIp")  
+    regid=cfg.get("WebSync","RegisterId")
+    runWebDownload(url,ip,regid)       
 
     
