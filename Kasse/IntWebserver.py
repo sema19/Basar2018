@@ -264,7 +264,7 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
         # ------------------------------------------------------
         elif self.path=="/initiate_shutdown":
             logger.info("Initiate Shutdown !!!!!")
-            stopAllRequested.set()
+            stopAll.Stop()
             jsonData=json.dumps({"action":"shutdown"})                        
             self.wfile.write(jsonData.encode())
                 
