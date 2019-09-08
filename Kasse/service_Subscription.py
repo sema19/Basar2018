@@ -16,7 +16,7 @@ import stopAll
 
 logger = logging.getLogger('subscription')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler("log/subscription.log")
+fh = logging.FileHandler("log/subscriptionSender.log")
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
@@ -24,6 +24,14 @@ fmtr = logging.Formatter("%(threadName)s %(asctime)s  %(levelname)s: %(message)s
 ch.setFormatter(fmtr)
 logger.addHandler(fh)
 logger.addHandler(ch)
+
+recvlogger = logging.getLogger('subscriptionListener')
+recvlogger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("log/subscriptionListener.log")
+fh.setLevel(logging.DEBUG)
+recvlogger.addHandler(fh)
+recvlogger.addHandler(ch)
+
 
 from LocalStorage import LocalStorage
 stopAllEvent=threading.Event()
@@ -118,45 +126,70 @@ def startSubscriberListener(broadcastIp, broadcastPort):
 
 def runSubscriberListener(ip,port):
     subscriberListenerStopEvent.clear()
-    sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    if platform=="linux" or platform=="linux2":
-        ipa=ip.split('.')[0:3]
-        ipa.append('255')
-        sock.bind(('.'.join(ipa), port))
-        logger.info("START SUBSCRIBER LISTENER AT %s:%s (LINUX:%s)"%(str(ip),str(port),str(ipa)))
-    else:
-        sock.bind((ip, port))
-        logger.info("START SUBSCRIBER LISTENER AT %s:%s (WINDOWS)"%(str(ip),str(port)))    
+    while True:
+        try:
+            sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            if platform=="linux" or platform=="linux2":
+                ipa=ip.split('.')[0:3]
+                ipa.append('255')
+                sock.bind(('.'.join(ipa), port))
+                recvlogger.info("START SUBSCRIBER LISTENER AT %s:%s (LINUX:%s)"%(str(ip),str(port),str(ipa)))
+            else:
+                sock.bind((ip, port))
+                recvlogger.info("START SUBSCRIBER LISTENER AT %s:%s (WINDOWS)"%(str(ip),str(port)))
+
+            
+            #sock.settimeout(20.0)
+            #conn, addr = sock.accept()    
+        #except socket.timeout as exTimeout:
+        #    recvlogger.error("socket could not be established, timeout")
+            break
+        except Exception as ex:
+            recvlogger.error("opening socket threw Exception: %s"%(str(ex)))
+            time.sleep(10)
+        finally:
+            if subscriberListenerStopEvent.isSet():
+                subscriberListenerStopEvent.clear()
+                recvlogger.info("STOP SUBSCRIBER LISTENER")
+                break
+    
     while True:
         # wait for message
         #logger.debug("Wait for receive")
-        recv,info = sock.recvfrom(1024)
-        if subscriberListenerStopEvent.isSet():
-            subscriberListenerStopEvent.clear()
-            logger.info("STOP SUBSCRIBER LISTENER")
-            break
-            
-        #logger.debug("RECEIVED from %s:%s Data:%s"%(str(info[0]),str(info[1]), str(recv) ))        
-        if info[0]==ip:
-            # own broadcast
-            #logger.debug("OWN BROADCAST RECEIVED from %s:%s Data:%s"%(str(info[0]),str(info[1]), str(recv) ))
-            if not broadcastSentEvent.isSet():
-                logger.error("Error: own broadcast was not received")
-            broadcastSentEvent.clear()
-        else:
-            jsonData = json.loads(recv.decode())
-            ls = LocalStorage()            
-            paydeskId=jsonData["paydeskId"]
-            name=jsonData["name"]
-            create=jsonData["created"]
-            updated=jsonData["updated"]
-            syncIp=jsonData["syncIp"]
-            syncPort=int(jsonData["syncPort"])
-            ret=ls.createRemotePaydesk(paydeskId, name, create, updated, syncIp, syncPort)
-            if ret!=None:
-                logger.info("CREATED REMOTE PAYDESK FROM BROADCAST: %s at %s:%s"%(str(paydeskId),str(syncIp),str(syncPort)))
-            del ls
-            
+#        timedout=False
+        #conn.settimeout(20.0)
+        ls=None
+        try:            
+            recv,info = sock.recvfrom(1024)                                
+            recvlogger.debug("RECEIVED from %s:%s Data:%s"%(str(info[0]),str(info[1]), str(recv) ))        
+            if info[0]==ip:
+                # own broadcast
+                #recvlogger.debug("OWN BROADCAST RECEIVED from %s:%s Data:%s"%(str(info[0]),str(info[1]), str(recv) ))
+                if not broadcastSentEvent.isSet():
+                    recvlogger.error("Error: own broadcast was not received")
+                broadcastSentEvent.clear()
+            else:
+                jsonData = json.loads(recv.decode())
+                ls = LocalStorage()            
+                paydeskId=jsonData["paydeskId"]
+                name=jsonData["name"]
+                create=jsonData["created"]
+                updated=jsonData["updated"]
+                syncIp=jsonData["syncIp"]
+                syncPort=int(jsonData["syncPort"])
+                ret=ls.createRemotePaydesk(paydeskId, name, create, updated, syncIp, syncPort)
+                if ret!=None:
+                    recvlogger.info("CREATED REMOTE PAYDESK FROM BROADCAST: %s at %s:%s"%(str(paydeskId),str(syncIp),str(syncPort)))
+        except Exception as ex:
+            recvlogger.error("exception at listener: %s"%(str(ex)))
+        finally:
+            if ls!=None:
+                del ls
+            if subscriberListenerStopEvent.isSet():
+                subscriberListenerStopEvent.clear()
+                recvlogger.info("STOP SUBSCRIBER LISTENER")
+                break
+                    
         
                                     
             
