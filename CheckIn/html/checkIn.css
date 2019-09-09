@@ -1,0 +1,90 @@
+
+h1 
+{
+	background-color: #10E080;
+	padding: 10px;
+}
+
+
+#content {
+	float:left;	
+	width:100%;
+}
+
+#eingabeId {
+	float:left;
+	width: 50%;
+	font-family: "Arial";
+	font-size: 50px;
+	height:60px;
+	background-color: #E0E0FF;
+}
+
+#sum {
+	position: static;
+	float:right;
+	width: 45%;
+	font-family: "Arial";
+	font-size: 40px;
+	background-color: lime;
+	vertical-align:middle;
+	height: 70px;	
+}
+
+#sumtxt {
+	float: left;
+	background-color: red;
+	line-height: 0%;
+}
+
+#sumId {
+	float: right;
+	line-height: 0%;
+}
+
+
+#article {
+	float:left;
+	width:70%;
+}
+
+#message {
+	float:left;
+	width:60%;
+	height:50px;
+}
+
+#cart {
+	
+}
+
+#cartTableId {
+	border: 1px solid black;
+	width:100%;
+}
+
+#control{
+	float:left;
+	width:24%;
+	padding:10px;
+}
+
+.CtrlMenuBtn{
+	width:60%;
+	margin:20px;
+	height:40px;	
+}
+
+
+
+tr:nth-child(even) {background-color: #f2f2f2}
+
+tr
+{
+	border: 1px solid gray;
+}
+th
+{
+	border: 1px solid black;
+	background-color: #f2f2f2;
+}
