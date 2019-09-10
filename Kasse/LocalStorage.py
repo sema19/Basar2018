@@ -750,7 +750,7 @@ class LocalStorage(object):
         ret=[]
         try:
             stmt="SELECT ta.pos, ti.barcode,ti.bezeichnung,ti.groesse,ti.preis from articles ta join items ti on ta.barcode=ti.barcode "
-            stmt+="WHERE ta.cartId=%d ORDER BY ta.pos"%(cartId)
+            stmt+="WHERE ta.cartId=%d and ti.alt=0 ORDER BY ta.pos"%(cartId)
             #print(stmt)
             self.curs.execute(stmt)
             ret = self.curs.fetchall()  
