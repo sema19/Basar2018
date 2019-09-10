@@ -324,6 +324,8 @@ class LocalStorage(object):
                                                                bezeichnung TEXT,
                                                                groesse TEXT ,
                                                                preis FLOAT,
+                                                               gedruckt INTEGER,
+                                                               alt INTEGER,
                                                                created DATETIME,
                                                                modified DATETIME
                                                                 )''')
@@ -332,9 +334,9 @@ class LocalStorage(object):
     def insertItemsList(self, itemslist):
         stmtList=[] 
         for item in itemslist:                       
-            stmt= "INSERT INTO items (id,user_id, nummer,barcode,bezeichnung,groesse,preis,created,modified)"
-            stmt+=" VALUES (?,?,?,?,?,?,?,?,?)"
-            para=(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8])
+            stmt= "INSERT INTO items (id,user_id, nummer,barcode,bezeichnung,groesse,preis,gedruckt,alt,created,modified)"
+            stmt+=" VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+            para=(item[0],item[1],item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9],item[10])
             stmtList.append((stmt,para))
         ret=self.dbWriteMultiple(stmtList)
         return ret
@@ -576,7 +578,7 @@ class LocalStorage(object):
     
     # -------------------------------------------------------------------------
     def addArticle(self, barcode, cartId, pos):
-        stmt="SELECT barcode,bezeichnung,groesse,preis FROM items WHERE barcode=%s"%(barcode)
+        stmt="SELECT barcode,bezeichnung,groesse,preis FROM items WHERE barcode=%s AND alt=0"%(barcode)
         print(stmt)
         self.curs.execute(stmt)
         items = self.curs.fetchall()
@@ -602,7 +604,7 @@ class LocalStorage(object):
             ret=self.dbQueryOne(stmt)
             if ret!=None:
                 barcode=ret[0]                        
-                stmt="SELECT barcode,bezeichnung FROM items WHERE barcode=%s"%(str(barcode))
+                stmt="SELECT barcode,bezeichnung FROM items WHERE barcode=%s and alt=0"%(str(barcode))
                 delInfo=self.dbQueryOne(stmt)            
                 stmt="DELETE FROM articles WHERE status='placed' and cartId=%s and barcode=%s"%(str(cartId),str(barcode))
                 self.dbWrite(stmt)                
@@ -640,7 +642,7 @@ class LocalStorage(object):
     def addToCart(self, barcode):
         msg=""
         
-        items = self.dbQueryAll("SELECT barcode,bezeichnung,groesse,preis FROM items WHERE barcode=%s"%(barcode))            
+        items = self.dbQueryAll("SELECT barcode,bezeichnung,groesse,preis FROM items WHERE barcode=%s AND alt=0"%(barcode))            
         if len(items)>1:
             raise RequestError(1030,"Artikel  %s kommt mehrfach vor"%(str(barcode)))                
         elif len(items)==0:

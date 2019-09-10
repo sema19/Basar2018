@@ -1,3 +1,4 @@
+
 '''
 Created on 07.08.2017
 
@@ -21,6 +22,7 @@ from CheckInDatabase import CheckInDatabase
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 #from settings import settingsInst
+import codecs
 
 stopAllRequested=Event()
 
@@ -75,28 +77,28 @@ class localRequestHandler(BaseHTTPRequestHandler): #BaseHTTPRequestHandler):
         # ----------------------------- settings                                        
         if self.path=="/checkin.html":
             self.getOkTextHeader()
-            with open("html/checkIn.html",'r') as f:                
+            with codecs.open("html/checkIn.html",'r','utf-8') as f:                
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         
         # ----------------------------- provide jquery
         elif self.path=="/jquery.min.js":
-            with open("html/jquery.min.js") as f:                       
+            with codecs.open("html/jquery.min.js",'r') as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide css files
         elif self.path=="/checkin.css":
-            with open("html/kasse.css") as f:                       
+            with codecs.open("html/kasse.css",'r','utf-8') as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())        
+                self.wfile.write(message.encode('utf-8'))        
         # ----------------------------- provide css files
         elif self.path=="/checkin.js":
-            with open("html/checkIn.js") as f:                       
+            with codecs.open("html/checkIn.js","r") as f:                       
                 message=f.read()
-                self.wfile.write(message.encode())
+                self.wfile.write(message.encode('utf-8'))
         # ----------------------------- provide jquery
         elif self.path=="/favicon.ico":
-            with open("html/icon.png") as f:                       
+            with codecs.open("html/icon.png",'rb') as f:                       
                 message=f.read()
                 self.wfile.write(message)
         else:            
